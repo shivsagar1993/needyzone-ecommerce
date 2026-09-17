@@ -49,7 +49,7 @@ const Header = () => {
   const isAdmin = pathname.startsWith("/admin");
 
   return (
-    <header className="bg-white sticky top-0 z-40 shadow-xs transition-all">
+    <header className="bg-white sticky top-0 z-40 shadow-xs transition-all print:hidden">
       {!isAdmin && <HeaderTop />}
 
       {!isAdmin ? (

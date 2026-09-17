@@ -34,7 +34,7 @@ const navigation = {
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-950 text-slate-400 border-t border-slate-800 text-sm">
+    <footer className="bg-slate-950 text-slate-400 border-t border-slate-800 text-sm print:hidden">
       <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 pt-16 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 pb-12 border-b border-slate-800">
           {/* Brand Info Column */}
