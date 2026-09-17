@@ -20,6 +20,9 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['react-icons', '@headlessui/react', 'date-fns'],
+    outputFileTracingIncludes: {
+      '/**': ['./prisma/dev.db'],
+    },
   },
   async headers() {
     return [
