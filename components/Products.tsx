@@ -2,6 +2,7 @@ import React from "react";
 import ProductItem from "./ProductItem";
 import apiClient from "@/lib/api";
 import { FaMagnifyingGlass } from "react-icons/fa6";
+import { FALLBACK_PRODUCTS } from "@/utils/fallbackProducts";
 
 const Products = async ({
   params,
@@ -20,7 +21,7 @@ const Products = async ({
   if (inStockNum === 1 && outOfStockNum === 1) stockMode = "lte";
   if (inStockNum === 0 && outOfStockNum === 0) stockMode = "gt";
 
-  let products = [];
+  let products = FALLBACK_PRODUCTS;
 
   try {
     const data = await apiClient.get(
@@ -35,16 +36,15 @@ const Products = async ({
       }sort=${searchParams?.sort || "defaultSort"}&page=${page}`
     );
 
-    if (!data.ok) {
-      console.error("Failed to fetch products:", data.statusText);
-      products = [];
-    } else {
+    if (data.ok) {
       const result = await data.json();
-      products = Array.isArray(result) ? result : [];
+      if (Array.isArray(result) && result.length > 0) {
+        products = result;
+      }
     }
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    products = [];
+  } catch (_error) {
+    // Gracefully use curated NeedyZone fallback products when backend API is offline
+    products = FALLBACK_PRODUCTS;
   }
 
   return (

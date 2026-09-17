@@ -62,7 +62,9 @@ export const apiClient = {
       if (err.name === 'AbortError') {
         console.warn(`[apiClient] Request to ${url} timed out after ${timeoutDuration}ms`);
       } else {
-        console.warn(`[apiClient] Network request failed for ${url}:`, err.message);
+        if (typeof window !== 'undefined' || process.env.DEBUG === 'true') {
+          console.warn(`[apiClient] Network request failed for ${url}:`, err.message);
+        }
       }
       throw err;
     }
