@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import { DEFAULT_MERCHANTS } from "../route";
+import { DEFAULT_MERCHANTS } from "@/utils/defaults";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

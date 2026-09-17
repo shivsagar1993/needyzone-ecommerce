@@ -3,18 +3,7 @@ import prisma from "@/utils/db";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
 
-export const DEFAULT_USERS = [
-  {
-    id: "admin-master-user",
-    email: "admin@needyzone.com",
-    role: "admin",
-  },
-  {
-    id: "admin-secondary-user",
-    email: "admin2@gmail.com",
-    role: "admin",
-  },
-];
+import { DEFAULT_USERS } from "@/utils/defaults";
 
 export async function GET() {
   try {

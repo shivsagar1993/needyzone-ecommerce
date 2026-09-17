@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import bcrypt from "bcryptjs";
-import { DEFAULT_USERS } from "../route";
+import { DEFAULT_USERS } from "@/utils/defaults";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

@@ -9,18 +9,8 @@ const getBaseUrl = (): string => {
     return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, '');
   }
 
-  // If in browser:
+  // If in browser, always use relative path to hit current origin Next.js API handlers
   if (typeof window !== 'undefined') {
-    const isLocal =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
-
-    // In local development, connect to local Express port 3001
-    if (isLocal) {
-      return `http://${window.location.hostname}:3001`;
-    }
-
-    // In production (Vercel / custom domain), use relative path to hit Next.js API handlers
     return '';
   }
 

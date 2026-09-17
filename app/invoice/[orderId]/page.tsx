@@ -295,7 +295,13 @@ const InvoicePage = () => {
                           {item.product?.mainImage && (
                             <div className="w-10 h-10 rounded-lg bg-slate-100 p-1 shrink-0 flex items-center justify-center border border-slate-200">
                               <Image
-                                src={`/${item.product.mainImage}`}
+                                src={
+                                  item.product.mainImage.startsWith("http")
+                                    ? item.product.mainImage
+                                    : item.product.mainImage.startsWith("/")
+                                    ? item.product.mainImage
+                                    : `/${item.product.mainImage}`
+                                }
                                 alt={item.product.title}
                                 width={36}
                                 height={36}
