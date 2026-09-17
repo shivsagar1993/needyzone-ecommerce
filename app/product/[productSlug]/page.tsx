@@ -68,7 +68,11 @@ const SingleProductPage = async ({ params }: SingleProductPageProps) => {
                 <Image
                   src={
                     product?.mainImage
-                      ? `/${product?.mainImage}`
+                      ? product.mainImage.startsWith("http")
+                        ? product.mainImage
+                        : product.mainImage.startsWith("/")
+                        ? product.mainImage
+                        : `/${product.mainImage}`
                       : "/product_placeholder.jpg"
                   }
                   width={420}
@@ -87,7 +91,15 @@ const SingleProductPage = async ({ params }: SingleProductPageProps) => {
                       className="w-20 h-20 bg-slate-50 rounded-xl border border-slate-200 p-2 flex items-center justify-center cursor-pointer hover:border-blue-500 transition-colors shrink-0"
                     >
                       <Image
-                        src={`/${imageItem.image}`}
+                        src={
+                          imageItem.image
+                            ? imageItem.image.startsWith("http")
+                              ? imageItem.image
+                              : imageItem.image.startsWith("/")
+                              ? imageItem.image
+                              : `/${imageItem.image}`
+                            : "/product_placeholder.jpg"
+                        }
                         width={64}
                         height={64}
                         alt="Product thumbnail"

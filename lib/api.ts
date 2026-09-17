@@ -9,13 +9,22 @@ const getBaseUrl = (): string => {
     return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, '');
   }
 
-  // If in browser, dynamically match current hostname (localhost vs 127.0.0.1 vs LAN IP)
+  // If in browser:
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname || '127.0.0.1';
-    return `http://${hostname}:3001`;
+    const isLocal =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    // In local development, connect to local Express port 3001
+    if (isLocal) {
+      return `http://${window.location.hostname}:3001`;
+    }
+
+    // In production (Vercel / custom domain), use relative path to hit Next.js API handlers
+    return '';
   }
 
-  return (config.apiBaseUrl || 'http://127.0.0.1:3001').replace(/\/$/, '');
+  return (config.apiBaseUrl || '').replace(/\/$/, '');
 };
 
 export const apiClient = {
