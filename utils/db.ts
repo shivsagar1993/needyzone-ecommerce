@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client"; 
 
 const prismaClientSingleton = () => {
-    // Validate that DATABASE_URL is present
+    // Default fallback for DATABASE_URL if not set
     if (!process.env.DATABASE_URL) {
-        throw new Error('DATABASE_URL environment variable is required');
+        process.env.DATABASE_URL = "file:./dev.db";
     }
 
     // Log database configuration for debugging
