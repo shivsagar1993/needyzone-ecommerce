@@ -34,6 +34,7 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
       if (response.status === 204) {
         toast.success("Category deleted successfully");
         router.push("/admin/categories");
+        router.refresh();
       } else {
         toast.error("Failed to delete category");
       }
@@ -58,6 +59,7 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
 
       if (response.status === 200) {
         toast.success("Category updated successfully");
+        router.refresh();
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Error updating category");
@@ -72,7 +74,7 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
 
   useEffect(() => {
     apiClient
-      .get(`/api/categories/${id}`)
+      .get(`/api/categories/${id}?t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         setCategoryInput({

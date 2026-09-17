@@ -3,11 +3,13 @@ import { DashboardSidebar } from "@/components";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { convertCategoryNameToURLFriendly } from "../../../../../utils/categoryFormating";
 import apiClient from "@/lib/api";
 import { FaArrowLeft, FaPlus, FaFolderPlus } from "react-icons/fa6";
 
 const DashboardNewCategoryPage = () => {
+  const router = useRouter();
   const [categoryInput, setCategoryInput] = useState({
     name: "",
   });
@@ -26,10 +28,14 @@ const DashboardNewCategoryPage = () => {
       });
 
       if (response.status === 201 || response.status === 200 || response.ok) {
-        toast.success("Category added successfully");
+        toast.success("Category added successfully! Redirecting to list...");
         setCategoryInput({
           name: "",
         });
+        setTimeout(() => {
+          router.push("/admin/categories");
+          router.refresh();
+        }, 600);
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to create category");

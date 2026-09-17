@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import HeaderTop from "./HeaderTop";
 import Image from "next/image";
 import SearchInput from "./SearchInput";
@@ -25,9 +25,38 @@ import {
   FaArrowUpRightFromSquare,
   FaBolt,
   FaPlug,
+  FaNetworkWired,
+  FaMicrochip,
+  FaHardDrive,
+  FaFolder,
 } from "react-icons/fa6";
+import apiClient from "@/lib/api";
+import { convertCategoryNameToURLFriendly } from "@/utils/categoryFormating";
 
-const categoryLinks = [
+interface HeaderCategoryLink {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const getCategoryIcon = (slugOrName: string): React.ComponentType<{ className?: string }> => {
+  const s = slugOrName.toLowerCase();
+  if (s.includes("cctv") || s.includes("camera") || s.includes("nvr") || s.includes("security")) return FaCamera;
+  if (s.includes("phone") || s.includes("mobile")) return FaMobileScreenButton;
+  if (s.includes("laptop") || s.includes("computer") || s.includes("pc")) return FaLaptop;
+  if (s.includes("headphone") || s.includes("earbud") || s.includes("audio")) return FaHeadphones;
+  if (s.includes("watch") || s.includes("wearable") || s.includes("clock")) return FaClock;
+  if (s.includes("speaker") || s.includes("sound")) return FaVolumeHigh;
+  if (s.includes("tablet")) return FaTabletScreenButton;
+  if (s.includes("cable") || s.includes("wire")) return FaBolt;
+  if (s.includes("charger") || s.includes("plug") || s.includes("power")) return FaPlug;
+  if (s.includes("network") || s.includes("wifi") || s.includes("router")) return FaNetworkWired;
+  if (s.includes("switch") || s.includes("chip")) return FaMicrochip;
+  if (s.includes("usb") || s.includes("storage") || s.includes("drive")) return FaHardDrive;
+  return FaFolder;
+};
+
+const categoryLinks: HeaderCategoryLink[] = [
   { name: "All Products", href: "/shop", icon: FaStore },
   { name: "CCTV & Security", href: "/shop/cctv-security", icon: FaCamera },
   { name: "Smartphones", href: "/shop/smart-phones", icon: FaMobileScreenButton },
@@ -44,6 +73,7 @@ const Header = () => {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { wishQuantity } = useWishlistStore();
+  const [links, setLinks] = useState<HeaderCategoryLink[]>(categoryLinks);
 
   const handleLogout = () => {
     setTimeout(() => signOut(), 500);
@@ -51,6 +81,34 @@ const Header = () => {
   };
 
   const isAdmin = pathname.startsWith("/admin");
+
+  useEffect(() => {
+    if (isAdmin) return;
+    apiClient
+      .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const dynamicLinks = [
+            { name: "All Products", href: "/shop", icon: FaStore },
+            ...data.map((cat: any) => {
+              const rawName = cat.name || cat.id || "";
+              const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
+              const displayName = rawName.includes("-")
+                ? rawName.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+                : rawName.charAt(0).toUpperCase() + rawName.slice(1);
+              return {
+                name: displayName,
+                href: `/shop/${slug}`,
+                icon: getCategoryIcon(`${slug} ${rawName}`),
+              };
+            }),
+          ];
+          setLinks(dynamicLinks);
+        }
+      })
+      .catch(() => {});
+  }, [isAdmin]);
 
   return (
     <header className="bg-white sticky top-0 z-40 shadow-xs transition-all print:hidden">
@@ -93,7 +151,7 @@ const Header = () => {
             {/* Category Navigation Strip */}
             <div className="flex items-center justify-between py-2 border-t border-slate-100 text-xs font-medium">
               <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                {categoryLinks.map((item) => {
+                {links.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
                   return (

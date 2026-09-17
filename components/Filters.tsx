@@ -1,9 +1,12 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSortStore } from "@/app/_zustand/sortStore";
 import { usePaginationStore } from "@/app/_zustand/paginationStore";
-import { FaSliders, FaRotateLeft } from "react-icons/fa6";
+import { FaSliders, FaRotateLeft, FaFolderOpen } from "react-icons/fa6";
+import apiClient from "@/lib/api";
+import { convertCategoryNameToURLFriendly } from "@/utils/categoryFormating";
 
 interface InputCategory {
   inStock: { text: string; isChecked: boolean };
@@ -18,6 +21,7 @@ const Filters = () => {
   const { replace } = useRouter();
   const { page, setPage } = usePaginationStore();
   const { sortBy, changeSortBy } = useSortStore();
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
   const isInitialized = useRef(false);
 
@@ -50,6 +54,15 @@ const Filters = () => {
       if (urlPage > 0) setPage(urlPage);
     }
     isInitialized.current = true;
+
+    // Fetch dynamic categories for department filter
+    apiClient
+      .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setCategories(data);
+      })
+      .catch(() => {});
   }, []);
 
   // Synchronize URL when filters or sort change
@@ -104,6 +117,56 @@ const Filters = () => {
           <span>Reset</span>
         </button>
       </div>
+
+      {/* Departments / Categories Filter */}
+      {categories.length > 0 && (
+        <div className="py-4 border-b border-slate-100">
+          <div className="flex items-center justify-between mb-2.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <FaFolderOpen className="text-blue-600 text-xs" />
+              <span>Departments</span>
+            </h4>
+            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+              {categories.length}
+            </span>
+          </div>
+          <div className="space-y-1 max-h-52 overflow-y-auto pr-1 no-scrollbar">
+            <Link
+              href="/shop"
+              className={`block px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                pathname === "/shop"
+                  ? "bg-blue-50 text-blue-600 font-bold border border-blue-100"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              All Departments
+            </Link>
+            {categories.map((c) => {
+              const slug = c.id || convertCategoryNameToURLFriendly(c.name);
+              const isActive = pathname.includes(`/shop/${slug}`);
+              const displayName = c.name.includes("-")
+                ? c.name
+                    .split("-")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ")
+                : c.name.charAt(0).toUpperCase() + c.name.slice(1);
+              return (
+                <Link
+                  key={c.id}
+                  href={`/shop/${slug}`}
+                  className={`block px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600 font-bold border border-blue-100"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  {displayName}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Availability */}
       <div className="py-4 border-b border-slate-100">

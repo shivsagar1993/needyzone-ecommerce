@@ -208,7 +208,9 @@ const DashboardProductDetails = ({ params }: DashboardProductDetailsProps) => {
 
   const fetchCategories = async () => {
     try {
-      const res = await apiClient.get(`/api/categories`);
+      const res = await apiClient.get(`/api/categories?t=${Date.now()}`, {
+        cache: "no-store",
+      });
       const data = await res.json();
       setCategories(data || []);
     } catch (error) {

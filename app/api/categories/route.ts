@@ -1,8 +1,12 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { nanoid } from "nanoid";
 import fs from "fs";
 import path from "path";
+import os from "os";
 
 const DEFAULT_CATEGORIES = [
   { id: "cctv-security", name: "CCTV & Security" },
@@ -21,7 +25,7 @@ const DEFAULT_CATEGORIES = [
   { id: "tablets", name: "Tablets" },
 ];
 
-const getCustomCategoriesFile = () => path.join("/tmp", "custom-categories.json");
+const getCustomCategoriesFile = () => path.join(os.tmpdir(), "custom-categories.json");
 
 const readCustomCategories = (): Array<{ id: string; name: string }> => {
   try {
@@ -79,30 +83,45 @@ export async function GET(req: NextRequest) {
     }
 
     // Sort alphabetically by name
-    allCats.sort((a, b) => a.name.localeCompare(b.name));
+    const noCacheHeaders = {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    };
 
     if (isDebug) {
-      return NextResponse.json({
-        debug: true,
-        count: allCats.length,
-        categories: allCats,
-        dbUrlPrefix: process.env.DATABASE_URL ? process.env.DATABASE_URL.slice(0, 15) : "none",
-      });
+      return NextResponse.json(
+        {
+          debug: true,
+          count: allCats.length,
+          categories: allCats,
+          dbUrlPrefix: process.env.DATABASE_URL ? process.env.DATABASE_URL.slice(0, 15) : "none",
+        },
+        { headers: noCacheHeaders }
+      );
     }
 
-    return NextResponse.json(allCats);
+    return NextResponse.json(allCats, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json(DEFAULT_CATEGORIES);
+    return NextResponse.json(DEFAULT_CATEGORIES, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      },
+    });
   }
 }
 
 export async function POST(req: NextRequest) {
+  const noCacheHeaders = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  };
+
   try {
     const body = await req.json();
     const rawName = (body.name || "").trim();
 
     if (!rawName) {
-      return NextResponse.json({ error: "Category department name is required" }, { status: 400 });
+      return NextResponse.json({ error: "Category department name is required" }, { status: 400, headers: noCacheHeaders });
     }
 
     // Format readable name: e.g. "smart-watches" -> "Smart Watches"
@@ -130,7 +149,7 @@ export async function POST(req: NextRequest) {
 
       if (existing) {
         saveCustomCategory(existing);
-        return NextResponse.json(existing, { status: 200 });
+        return NextResponse.json(existing, { status: 200, headers: noCacheHeaders });
       }
 
       const created = await prisma.category.create({
@@ -141,13 +160,13 @@ export async function POST(req: NextRequest) {
       });
 
       saveCustomCategory(created);
-      return NextResponse.json(created, { status: 201 });
+      return NextResponse.json(created, { status: 201, headers: noCacheHeaders });
     } catch (dbErr: any) {
       console.warn("[API /api/categories POST] DB create warning, saving to file backup:", dbErr.message);
       saveCustomCategory(newCategory);
-      return NextResponse.json(newCategory, { status: 201 });
+      return NextResponse.json(newCategory, { status: 201, headers: noCacheHeaders });
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || "Failed to create category" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to create category" }, { status: 500, headers: noCacheHeaders });
   }
 }

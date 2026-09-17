@@ -4,16 +4,17 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { formatCategoryName } from "../../../../utils/categoryFormating";
 import apiClient from "@/lib/api";
-import { FaPlus, FaEye, FaFolderOpen, FaMagnifyingGlass } from "react-icons/fa6";
+import { FaPlus, FaEye, FaFolderOpen, FaMagnifyingGlass, FaArrowsRotate } from "react-icons/fa6";
 
 const DashboardCategory = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchCategories = () => {
     setLoading(true);
-    apiClient.get("/api/categories")
+    apiClient
+      .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         setCategories(Array.isArray(data) ? data : []);
@@ -23,6 +24,10 @@ const DashboardCategory = () => {
         console.error("Failed to load categories:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchCategories();
   }, []);
 
   const filteredCategories = categories.filter((cat) =>
@@ -50,7 +55,16 @@ const DashboardCategory = () => {
             </p>
           </div>
 
-          <div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={fetchCategories}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition-all active:scale-95 shadow-xs disabled:opacity-60"
+              title="Refresh Category List"
+            >
+              <FaArrowsRotate className={`text-xs ${loading ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
             <Link
               href="/admin/categories/new"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-all active:scale-95 shrink-0"
@@ -101,8 +115,8 @@ const DashboardCategory = () => {
                           <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
                             <FaFolderOpen className="text-sm" />
                           </div>
-                          <span className="font-bold text-slate-900 text-sm">
-                            {formatCategoryName(category?.name)}
+                          <span className="font-bold text-slate-900 text-sm capitalize">
+                            {formatCategoryName(category?.name) || category?.name}
                           </span>
                         </div>
                       </td>

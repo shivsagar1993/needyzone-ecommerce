@@ -1,10 +1,109 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import CategoryItem from "./CategoryItem";
 import Image from "next/image";
 import { categoryMenuList } from "@/lib/utils";
 import Heading from "./Heading";
+import apiClient from "@/lib/api";
+import { convertCategoryNameToURLFriendly } from "@/utils/categoryFormating";
+
+interface CategoryMenuItem {
+  id: string | number;
+  title: string;
+  src: string;
+  href: string;
+}
+
+const getCategoryImage = (slug: string, name: string): string => {
+  const key = `${slug} ${name}`.toLowerCase();
+  if (key.includes("cctv") || key.includes("camera") || key.includes("nvr") || key.includes("security")) {
+    return "/dept-cctv.jpg";
+  }
+  if (key.includes("phone") || key.includes("mobile") || key.includes("smart-phone")) {
+    return "/dept-smartphone.jpg";
+  }
+  if (key.includes("laptop") || key.includes("computer") || key.includes("pc")) {
+    return "/dept-laptop.jpg";
+  }
+  if (key.includes("headphone") || key.includes("earbud") || key.includes("audio") || key.includes("speaker")) {
+    return "/stock-headphones.jpg";
+  }
+  if (key.includes("watch") || key.includes("wearable") || key.includes("clock")) {
+    return "/stock-smartwatch.jpg";
+  }
+  if (key.includes("cable") || key.includes("wire") || key.includes("cord")) {
+    return "/dept-cables.jpg";
+  }
+  if (key.includes("charger") || key.includes("adapter") || key.includes("power-bank")) {
+    return "/dept-charger.jpg";
+  }
+  if (key.includes("power") || key.includes("strip") || key.includes("extension")) {
+    return "/dept-powerstrip.jpg";
+  }
+  if (key.includes("network") || key.includes("wifi") || key.includes("router")) {
+    return "/dept-networking.jpg";
+  }
+  if (key.includes("switch") || key.includes("iot") || key.includes("smart")) {
+    return "/dept-smartswitch.jpg";
+  }
+  if (key.includes("usb") || key.includes("storage") || key.includes("ssd") || key.includes("drive")) {
+    return "/dept-storage.jpg";
+  }
+  if (key.includes("light") || key.includes("bulb") || key.includes("lamp")) {
+    return "/dept-lighting.jpg";
+  }
+  return "/product_placeholder.jpg";
+};
+
+const formatDisplayTitle = (rawName: string): string => {
+  if (!rawName) return "Category";
+  if (rawName.includes("-")) {
+    return rawName
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
+  return rawName.charAt(0).toUpperCase() + rawName.slice(1);
+};
 
 const CategoryMenu = () => {
+  const [items, setItems] = useState<CategoryMenuItem[]>(categoryMenuList);
+
+  useEffect(() => {
+    apiClient
+      .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const dynamicItems: CategoryMenuItem[] = data.map((cat: any) => {
+            const rawName = cat.name || cat.id || "";
+            const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
+            const title = formatDisplayTitle(rawName);
+            const src = getCategoryImage(slug, title);
+            return {
+              id: cat.id,
+              title,
+              src,
+              href: `/shop/${slug}`,
+            };
+          });
+
+          // Add "All Products" link at the end
+          dynamicItems.push({
+            id: "all-products-link",
+            title: "All Products",
+            src: "/dept-lighting.jpg",
+            href: "/shop",
+          });
+
+          setItems(dynamicItems);
+        }
+      })
+      .catch((err) => {
+        console.warn("[CategoryMenu] Failed loading dynamic categories, keeping defaults:", err);
+      });
+  }, []);
+
   return (
     <section className="py-20 bg-slate-50/80 border-b border-slate-200/60">
       <div className="max-w-screen-2xl mx-auto px-6 lg:px-12">
@@ -14,8 +113,8 @@ const CategoryMenu = () => {
           subtitle="Explore top technology segments, from daily smart devices to high-end creator gear."
           center={true}
         />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 mt-10">
-          {categoryMenuList.map((item) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 mt-10">
+          {items.map((item) => (
             <CategoryItem title={item.title} key={item.id} href={item.href}>
               <div className="w-full aspect-square relative rounded-xl overflow-hidden bg-slate-50/60 p-3 mb-2 flex items-center justify-center group-hover:bg-blue-50/40 transition-colors">
                 <Image

@@ -1,7 +1,7 @@
 "use client";
 import { DashboardSidebar } from "@/components";
 import apiClient from "@/lib/api";
-import { convertCategoryNameToURLFriendly as convertSlugToURLFriendly } from "@/utils/categoryFormating";
+import { convertCategoryNameToURLFriendly as convertSlugToURLFriendly, formatCategoryName } from "@/utils/categoryFormating";
 import { sanitizeFormData } from "@/lib/form-sanitize";
 import Image from "next/image";
 import Link from "next/link";
@@ -220,7 +220,9 @@ const AddNewProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await apiClient.get(`/api/categories`);
+      const res = await apiClient.get(`/api/categories?t=${Date.now()}`, {
+        cache: "no-store",
+      });
       const data = await res.json();
       setCategories(data || []);
       setProduct((prev) => ({
@@ -440,7 +442,7 @@ const AddNewProduct = () => {
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {formatCategoryName(c.name) || c.name}
                     </option>
                   ))}
                 </select>
