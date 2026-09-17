@@ -4,7 +4,6 @@ export const revalidate = 0;
 import {
   Breadcrumb,
   Filters,
-  Pagination,
   Products,
   SortBy,
 } from "@/components";
@@ -63,9 +62,6 @@ const ShopPage = async ({
           </div>
           <div className="lg:col-span-3 flex flex-col">
             <Products params={awaitedParams} searchParams={awaitedSearchParams} />
-            <div className="mt-8 flex justify-center">
-              <Pagination />
-            </div>
           </div>
         </div>
       </div>

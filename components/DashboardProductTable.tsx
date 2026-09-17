@@ -4,13 +4,15 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import apiClient from "@/lib/api";
 import { sanitize } from "@/lib/sanitize";
-import { FaPlus, FaMagnifyingGlass, FaEye, FaTable, FaTrashCan, FaArrowUpRightFromSquare } from "react-icons/fa6";
+import { FaPlus, FaMagnifyingGlass, FaEye, FaTable, FaTrashCan, FaArrowUpRightFromSquare, FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import toast from "react-hot-toast";
 
 const DashboardProductTable = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     let isMounted = true;
@@ -38,10 +40,21 @@ const DashboardProductTable = () => {
     };
   }, []);
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
   const filteredProducts = products.filter((p) =>
     p?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p?.manufacturer?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const activePage = Math.min(currentPage, totalPages);
+  const paginatedProducts = filteredProducts.slice((activePage - 1) * pageSize, activePage * pageSize);
+  const startItem = filteredProducts.length > 0 ? (activePage - 1) * pageSize + 1 : 0;
+  const endItem = Math.min(activePage * pageSize, filteredProducts.length);
 
   const handleDeleteProduct = async (id: string, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"? This will also unlink it from orders.`)) {
@@ -103,7 +116,7 @@ const DashboardProductTable = () => {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search by title or manufacturer..."
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
             />
@@ -129,8 +142,8 @@ const DashboardProductTable = () => {
                     Loading catalog products...
                   </td>
                 </tr>
-              ) : filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => {
+              ) : paginatedProducts.length > 0 ? (
+                paginatedProducts.map((product) => {
                   const inStock = product?.inStock > 0;
                   return (
                     <tr
@@ -247,6 +260,64 @@ const DashboardProductTable = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Table Pagination Footer */}
+        {!loading && filteredProducts.length > 0 && (
+          <div className="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+            <div className="text-xs text-slate-500">
+              Showing <span className="font-semibold text-slate-800">{startItem}</span> to{" "}
+              <span className="font-semibold text-slate-800">{endItem}</span> of{" "}
+              <span className="font-semibold text-slate-800">{filteredProducts.length}</span> products
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={activePage <= 1}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border flex items-center gap-1 ${
+                    activePage <= 1
+                      ? "border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed"
+                      : "border-slate-200 text-slate-700 bg-white hover:border-blue-500 hover:text-blue-600 shadow-sm"
+                  }`}
+                >
+                  <FaChevronLeft className="text-[10px]" />
+                  <span>Prev</span>
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setCurrentPage(p)}
+                    className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition-all ${
+                      p === activePage
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white text-slate-700 border border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={activePage >= totalPages}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border flex items-center gap-1 ${
+                    activePage >= totalPages
+                      ? "border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed"
+                      : "border-slate-200 text-slate-700 bg-white hover:border-blue-500 hover:text-blue-600 shadow-sm"
+                  }`}
+                >
+                  <span>Next</span>
+                  <FaChevronRight className="text-[10px]" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

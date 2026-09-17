@@ -39,6 +39,12 @@ export async function GET(req: NextRequest) {
     const outOfStock = searchParams.get("outOfStock");
     const search = searchParams.get("search") || searchParams.get("q");
     const sort = searchParams.get("sort") || "defaultSort";
+    const mode = searchParams.get("mode");
+
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const defaultLimit = mode === "admin" ? 1000 : 9;
+    const limit = searchParams.get("limit") ? Math.max(1, parseInt(searchParams.get("limit")!, 10)) : defaultLimit;
+    const skip = (page - 1) * limit;
 
     try {
       let matchingCategoryIds: string[] = [];
@@ -105,7 +111,16 @@ export async function GET(req: NextRequest) {
         orderBy = { rating: "desc" };
       } else if (sort === "latest") {
         orderBy = { id: "desc" };
+      } else if (sort === "titleAsc") {
+        orderBy = { title: "asc" };
+      } else if (sort === "titleDesc") {
+        orderBy = { title: "desc" };
       }
+
+      const totalCount = await prisma.product.count({ where });
+      const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+      const isStorePaginated = !(mode === "admin" && !searchParams.get("limit") && !searchParams.get("page"));
 
       const dbProducts = await prisma.product.findMany({
         where,
@@ -113,15 +128,24 @@ export async function GET(req: NextRequest) {
           category: true,
         },
         orderBy,
+        skip: isStorePaginated ? skip : undefined,
+        take: isStorePaginated ? limit : undefined,
       });
 
+      const headers = {
+        "x-total-count": String(totalCount),
+        "x-total-pages": String(totalPages),
+        "x-current-page": String(page),
+        "x-page-size": String(limit),
+        "Access-Control-Expose-Headers": "x-total-count, x-total-pages, x-current-page, x-page-size",
+      };
+
       if (dbProducts && dbProducts.length > 0) {
-        return NextResponse.json(dbProducts);
+        return NextResponse.json(dbProducts, { headers });
       }
 
-      // If category was specified and 0 products matched in DB, return empty array for that category
+      // If category was specified and 0 products matched in DB, check fallback products for this category
       if (categoryParam && categoryParam !== "all" && categoryParam.trim() !== "") {
-        // Check fallback products for this category
         const normTarget = normalizeCategoryKey(categoryParam);
         const aliases = CATEGORY_ALIASES[normTarget] || [normTarget];
         const matchedFallback = FALLBACK_PRODUCTS.filter((p) => {
@@ -129,7 +153,20 @@ export async function GET(req: NextRequest) {
           const pCatName = normalizeCategoryKey(p.category?.name || "");
           return aliases.includes(pCatId) || aliases.includes(pCatName);
         });
-        return NextResponse.json(matchedFallback);
+
+        const fbTotalCount = matchedFallback.length;
+        const fbTotalPages = Math.max(1, Math.ceil(fbTotalCount / limit));
+        const paginatedFb = isStorePaginated ? matchedFallback.slice(skip, skip + limit) : matchedFallback;
+
+        return NextResponse.json(paginatedFb, {
+          headers: {
+            "x-total-count": String(fbTotalCount),
+            "x-total-pages": String(fbTotalPages),
+            "x-current-page": String(page),
+            "x-page-size": String(limit),
+            "Access-Control-Expose-Headers": "x-total-count, x-total-pages, x-current-page, x-page-size",
+          },
+        });
       }
     } catch (dbErr) {
       console.warn("[API /api/products] Database query error, serving fallback products:", dbErr);
@@ -147,7 +184,20 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json(filteredFallback);
+    const fbTotal = filteredFallback.length;
+    const fbPages = Math.max(1, Math.ceil(fbTotal / limit));
+    const isStorePaginated = !(mode === "admin" && !searchParams.get("limit") && !searchParams.get("page"));
+    const paginatedFallback = isStorePaginated ? filteredFallback.slice(skip, skip + limit) : filteredFallback;
+
+    return NextResponse.json(paginatedFallback, {
+      headers: {
+        "x-total-count": String(fbTotal),
+        "x-total-pages": String(fbPages),
+        "x-current-page": String(page),
+        "x-page-size": String(limit),
+        "Access-Control-Expose-Headers": "x-total-count, x-total-pages, x-current-page, x-page-size",
+      },
+    });
   } catch (error: any) {
     console.error("[API /api/products] Internal Server Error:", error);
     return NextResponse.json(FALLBACK_PRODUCTS);

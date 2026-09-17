@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSortStore } from "@/app/_zustand/sortStore";
 import { usePaginationStore } from "@/app/_zustand/paginationStore";
 import { FaSliders, FaRotateLeft } from "react-icons/fa6";
@@ -15,35 +14,78 @@ interface InputCategory {
 
 const Filters = () => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { replace } = useRouter();
-  const { page } = usePaginationStore();
+  const { page, setPage } = usePaginationStore();
+  const { sortBy, changeSortBy } = useSortStore();
 
-  const [inputCategory, setInputCategory] = useState<InputCategory>({
-    inStock: { text: "instock", isChecked: true },
-    outOfStock: { text: "outofstock", isChecked: true },
-    priceFilter: { text: "price", value: 3000 },
-    ratingFilter: { text: "rating", value: 0 },
-  });
-  const { sortBy } = useSortStore();
+  const isInitialized = useRef(false);
 
+  const [inputCategory, setInputCategory] = useState<InputCategory>(() => ({
+    inStock: {
+      text: "instock",
+      isChecked: searchParams?.get("inStock") !== "false",
+    },
+    outOfStock: {
+      text: "outofstock",
+      isChecked: searchParams?.get("outOfStock") !== "false",
+    },
+    priceFilter: {
+      text: "price",
+      value: searchParams?.get("price") ? Number(searchParams.get("price")) : 3000,
+    },
+    ratingFilter: {
+      text: "rating",
+      value: searchParams?.get("rating") ? Number(searchParams.get("rating")) : 0,
+    },
+  }));
+
+  // On mount, sync URL sort and page into stores
   useEffect(() => {
-    const params = new URLSearchParams();
-    params.set("outOfStock", inputCategory.outOfStock.isChecked.toString());
-    params.set("inStock", inputCategory.inStock.isChecked.toString());
-    params.set("rating", inputCategory.ratingFilter.value.toString());
-    params.set("price", inputCategory.priceFilter.value.toString());
-    params.set("sort", sortBy);
-    params.set("page", page.toString());
-    replace(`${pathname}?${params}`);
-  }, [inputCategory, sortBy, page]);
+    if (searchParams?.get("sort")) {
+      changeSortBy(searchParams.get("sort")!);
+    }
+    if (searchParams?.get("page")) {
+      const urlPage = Number(searchParams.get("page"));
+      if (urlPage > 0) setPage(urlPage);
+    }
+    isInitialized.current = true;
+  }, []);
+
+  // Synchronize URL when filters or sort change
+  const handleFilterChange = (updater: (prev: InputCategory) => InputCategory) => {
+    setInputCategory((prev) => {
+      const next = updater(prev);
+      setPage(1); // Reset to page 1 when user explicitly interacts with filters
+      const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+      params.set("outOfStock", next.outOfStock.isChecked.toString());
+      params.set("inStock", next.inStock.isChecked.toString());
+      params.set("rating", next.ratingFilter.value.toString());
+      params.set("price", next.priceFilter.value.toString());
+      params.set("sort", sortBy);
+      params.set("page", "1");
+      replace(`${pathname}?${params.toString()}`);
+      return next;
+    });
+  };
 
   const handleReset = () => {
-    setInputCategory({
+    const defaultFilters: InputCategory = {
       inStock: { text: "instock", isChecked: true },
       outOfStock: { text: "outofstock", isChecked: true },
       priceFilter: { text: "price", value: 3000 },
       ratingFilter: { text: "rating", value: 0 },
-    });
+    };
+    setInputCategory(defaultFilters);
+    setPage(1);
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+    params.set("outOfStock", "true");
+    params.set("inStock", "true");
+    params.set("rating", "0");
+    params.set("price", "3000");
+    params.set("sort", sortBy);
+    params.set("page", "1");
+    replace(`${pathname}?${params.toString()}`);
   };
 
   return (
@@ -74,13 +116,13 @@ const Filters = () => {
               type="checkbox"
               checked={inputCategory.inStock.isChecked}
               onChange={() =>
-                setInputCategory({
-                  ...inputCategory,
+                handleFilterChange((prev) => ({
+                  ...prev,
                   inStock: {
                     text: "instock",
-                    isChecked: !inputCategory.inStock.isChecked,
+                    isChecked: !prev.inStock.isChecked,
                   },
-                })
+                }))
               }
               className="checkbox checkbox-sm rounded-md checkbox-primary"
             />
@@ -91,13 +133,13 @@ const Filters = () => {
               type="checkbox"
               checked={inputCategory.outOfStock.isChecked}
               onChange={() =>
-                setInputCategory({
-                  ...inputCategory,
+                handleFilterChange((prev) => ({
+                  ...prev,
                   outOfStock: {
                     text: "outofstock",
-                    isChecked: !inputCategory.outOfStock.isChecked,
+                    isChecked: !prev.outOfStock.isChecked,
                   },
-                })
+                }))
               }
               className="checkbox checkbox-sm rounded-md checkbox-primary"
             />
@@ -123,15 +165,13 @@ const Filters = () => {
           step={50}
           value={inputCategory.priceFilter.value}
           className="range range-primary range-xs w-full mt-2"
-          onChange={(e) =>
-            setInputCategory({
-              ...inputCategory,
-              priceFilter: {
-                text: "price",
-                value: Number(e.target.value),
-              },
-            })
-          }
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            handleFilterChange((prev) => ({
+              ...prev,
+              priceFilter: { text: "price", value: val },
+            }));
+          }}
         />
         <div className="flex justify-between text-[11px] text-slate-400 mt-1">
           <span>$0</span>
@@ -156,12 +196,13 @@ const Filters = () => {
           max={5}
           step={1}
           value={inputCategory.ratingFilter.value}
-          onChange={(e) =>
-            setInputCategory({
-              ...inputCategory,
-              ratingFilter: { text: "rating", value: Number(e.target.value) },
-            })
-          }
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            handleFilterChange((prev) => ({
+              ...prev,
+              ratingFilter: { text: "rating", value: val },
+            }));
+          }}
           className="range range-warning range-xs w-full mt-2"
         />
         <div className="flex justify-between text-[11px] text-slate-400 mt-1 px-1">
