@@ -69,7 +69,7 @@ interface Order {
   name: string;
   phone: string;
   postalCode: string;
-  status: "processing" | "canceled" | "delivered";
+  status: string;
   city: string;
   country: string;
   orderNotice: string?;
@@ -92,29 +92,4 @@ interface WishListItem {
   userId: string;
   productId: string;
   product: Product;
-}
-
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      image: string;
-      role: string;
-    };
-  }
-
-  interface User {
-    id: string;
-    role: string;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: string;
-  }
 }

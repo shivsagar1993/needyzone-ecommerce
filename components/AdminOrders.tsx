@@ -47,7 +47,7 @@ const AdminOrders = () => {
     };
   }, []);
 
-  const handleStatusChange = async (orderId: string, newStatus: string) => {
+  const handleStatusChange = async (orderId: string, newStatus: Order["status"]) => {
     setUpdatingId(orderId);
     const previousOrders = [...orders];
 

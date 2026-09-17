@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import apiClient from "@/lib/api";
-import { FaFileInvoice, FaShieldCheck, FaCircleInfo } from "react-icons/fa6";
+import { FaFileInvoice, FaCircleInfo } from "react-icons/fa6";
 
 const CheckoutPage = () => {
   const { data: session } = useSession();

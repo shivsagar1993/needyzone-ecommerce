@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { FaEnvelope, FaShieldCheck } from 'react-icons/fa6';
+import { FaEnvelope } from 'react-icons/fa6';
 
 const Newsletter = () => {
   const [email, setEmail] = useState("");

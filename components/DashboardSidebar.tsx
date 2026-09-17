@@ -16,7 +16,19 @@ import {
 } from "react-icons/fa6";
 import { FaFileUpload } from "react-icons/fa";
 
-const navSections = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  exact?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
   {
     title: "Overview",
     items: [
