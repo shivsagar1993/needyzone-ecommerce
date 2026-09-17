@@ -1,6 +1,13 @@
 {
-  "name": "electronic-ecommerce-shop-with-dashboard",
-  "version": "0.1.0",
+  "name": "needyzone-ecommerce",
+  "version": "1.0.0",
+  "description": "NeedyZone - Modern Electronics eCommerce Storefront with Admin Dashboard",
+  "author": "Shivsagar Kumar <shivsagar1993@users.noreply.github.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shivsagar1993/needyzone-ecommerce.git"
+  },
   "private": true,
   "scripts": {
     "dev": "next dev -p 3010",       
