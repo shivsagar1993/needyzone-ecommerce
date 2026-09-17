@@ -40,3 +40,4 @@ export const DEFAULT_USERS = [
     role: "admin",
   },
 ];
+

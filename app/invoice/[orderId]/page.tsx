@@ -179,22 +179,28 @@ const InvoicePage = () => {
       <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 sm:p-12 print:p-0 print:shadow-none print:border-0 print:rounded-none print:max-w-none">
         {/* Header Strip */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pb-8 border-b border-slate-200">
-          <div className="flex items-start gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-md shrink-0">
-              S
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">
-                SINGI<span className="text-blue-600">TRONIC</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <Link href="/" className="shrink-0">
+              <Image
+                src="/needyzone-logo.png"
+                width={180}
+                height={50}
+                alt="NeedyZone"
+                className="h-10 sm:h-12 w-auto object-contain"
+                priority
+              />
+            </Link>
+            <div className="sm:border-l sm:border-slate-200 sm:pl-4">
+              <h1 className="text-xl font-black tracking-tight text-slate-900">
+                NEEDY<span className="text-red-600">ZONE</span>
               </h1>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Electronics & Computing Hardware
+                Electronics & Surveillance Systems
               </p>
-              <div className="mt-2 text-[11px] text-slate-500 space-y-0.5">
-                <p>1200 Innovation Parkway, Suite 400</p>
-                <p>Belgrade, Tech District 11000</p>
-                <p>VAT ID: RS-892019482 | Reg No: 20491823</p>
-                <p>support@singitronic.com | +381 61 123 321</p>
+              <div className="mt-1 text-[11px] text-slate-500 space-y-0.5">
+                <p>NeedyZone Technology HQ, New Delhi, India</p>
+                <p>GSTIN / Tax ID: 07AAACN1234D1Z5 | Reg: NZ-2026-IN</p>
+                <p>support@needyzone.com | +91 98765 43210</p>
               </div>
             </div>
           </div>
@@ -350,16 +356,16 @@ const InvoicePage = () => {
             </div>
             <div className="space-y-1 text-slate-600 text-[11px] leading-relaxed">
               <p>
-                <span className="font-semibold text-slate-800">Bank:</span> First Global Commercial Bank
+                <span className="font-semibold text-slate-800">Bank:</span> State Bank of India / HDFC Commercial
               </p>
               <p>
-                <span className="font-semibold text-slate-800">Beneficiary:</span> Singitronic Electronics Corp.
+                <span className="font-semibold text-slate-800">Beneficiary:</span> NeedyZone Electronics Direct
               </p>
               <p>
-                <span className="font-semibold text-slate-800">IBAN:</span> RS35 1600 0001 2345 6789 12
+                <span className="font-semibold text-slate-800">Account No:</span> 50200012345678
               </p>
               <p>
-                <span className="font-semibold text-slate-800">SWIFT/BIC:</span> FGCBRSBG
+                <span className="font-semibold text-slate-800">IFSC / SWIFT:</span> HDFC0001234
               </p>
               <p>
                 <span className="font-semibold text-slate-800">Reference:</span>{" "}
@@ -399,14 +405,14 @@ const InvoicePage = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-emerald-600 font-semibold text-[11px]">
               <FaShieldHalved className="text-xs" />
-              <span>Official Singitronic Pro-Forma Invoice Document</span>
+              <span>Official NeedyZone Pro-Forma Invoice Document</span>
             </div>
-            <p className="text-[10px]">Thank you for your business enquiry. For queries, contact billing@singitronic.com.</p>
+            <p className="text-[10px]">Thank you for your business. For queries, contact billing@needyzone.com.</p>
           </div>
 
           <div className="text-right">
             <div className="font-serif italic text-slate-800 text-base font-semibold border-b border-slate-300 pb-1 px-4">
-              Singitronic Commercial Operations
+              NeedyZone Commercial Operations
             </div>
             <div className="text-[10px] uppercase tracking-wider text-slate-400 mt-1">Authorized Issuer</div>
           </div>
