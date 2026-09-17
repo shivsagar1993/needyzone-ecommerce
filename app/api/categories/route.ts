@@ -4,13 +4,19 @@ import { nanoid } from "nanoid";
 
 const DEFAULT_CATEGORIES = [
   { id: "cctv-security", name: "CCTV & Security" },
-  { id: "data-cables", name: "Data Cables" },
   { id: "mobile-chargers", name: "Mobile Chargers" },
+  { id: "data-cables", name: "Data Cables" },
   { id: "digital-switches", name: "Digital Switches" },
   { id: "power-strips", name: "Power Strips" },
   { id: "networking-devices", name: "Networking Devices" },
   { id: "usb-products", name: "USB Products" },
-  { id: "other-electronics", name: "Other Electronics" },
+  { id: "cameras", name: "Cameras" },
+  { id: "smart-phones", name: "Smartphones" },
+  { id: "laptops", name: "Laptops" },
+  { id: "headphones", name: "Headphones" },
+  { id: "watches", name: "Smart Watches" },
+  { id: "speakers", name: "Speakers" },
+  { id: "tablets", name: "Tablets" },
 ];
 
 export async function GET() {

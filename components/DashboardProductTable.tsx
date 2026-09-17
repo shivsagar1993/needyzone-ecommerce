@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import apiClient from "@/lib/api";
 import { sanitize } from "@/lib/sanitize";
-import { FaPlus, FaMagnifyingGlass, FaEye, FaTable, FaTrashCan } from "react-icons/fa6";
+import { FaPlus, FaMagnifyingGlass, FaEye, FaTable, FaTrashCan, FaArrowUpRightFromSquare } from "react-icons/fa6";
 import toast from "react-hot-toast";
 
 const DashboardProductTable = () => {
@@ -173,12 +173,14 @@ const DashboardProductTable = () => {
 
                       {/* Category & Manufacturer */}
                       <td className="py-4 px-4">
-                        <span className="inline-block font-semibold text-slate-800">
+                        <span className="inline-block font-bold text-slate-900 text-xs">
                           {sanitize(product?.manufacturer) || "—"}
                         </span>
-                        <span className="block text-[11px] text-slate-400 capitalize">
-                          {product?.category?.name || "General"}
-                        </span>
+                        <div className="mt-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 capitalize">
+                            {product?.category?.name || product?.categoryId || "General"}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Price */}
@@ -207,8 +209,17 @@ const DashboardProductTable = () => {
                       <td className="py-4 px-5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
+                            href={`/product/${product.slug}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs transition-colors border border-emerald-200/60"
+                            title="Live Preview on Storefront"
+                          >
+                            <FaArrowUpRightFromSquare className="text-[10px]" />
+                            <span>Live Preview</span>
+                          </Link>
+                          <Link
                             href={`/admin/products/${product.id}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-semibold text-xs transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-semibold text-xs transition-colors border border-slate-200/60"
                           >
                             <FaEye className="text-[10px]" />
                             <span>Edit</span>

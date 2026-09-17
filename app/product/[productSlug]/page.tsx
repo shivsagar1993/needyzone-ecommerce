@@ -71,10 +71,20 @@ const SingleProductPage = async ({ params }: SingleProductPageProps) => {
             <FaHouse className="text-xs text-slate-400" />
             <span>Home</span>
           </Link>
-          <FaChevronRight className="text-[10px] text-slate-400" />
           <Link href="/shop" className="hover:text-slate-900 transition-colors">
             Shop
           </Link>
+          {product?.category?.name && (
+            <>
+              <FaChevronRight className="text-[10px] text-slate-400" />
+              <Link
+                href={`/shop/${product.categoryId || product.category.name}`}
+                className="hover:text-blue-600 transition-colors capitalize font-medium"
+              >
+                {product.category.name}
+              </Link>
+            </>
+          )}
           <FaChevronRight className="text-[10px] text-slate-400" />
           <span className="text-blue-600 font-semibold truncate max-w-xs">
             {sanitize(product?.title)}
@@ -136,11 +146,21 @@ const SingleProductPage = async ({ params }: SingleProductPageProps) => {
             {/* Product Details & Actions Column */}
             <div className="lg:col-span-6 flex flex-col justify-between">
               <div>
-                {/* Brand & Stock Header */}
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
-                    {sanitize(product?.manufacturer) || "Electronics"}
-                  </span>
+                {/* Brand & Category & Stock Header */}
+                <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {product?.category?.name && (
+                      <Link
+                        href={`/shop/${product.categoryId || product.category.name}`}
+                        className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors"
+                      >
+                        {product.category.name}
+                      </Link>
+                    )}
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                      {sanitize(product?.manufacturer) || "NeedyZone"}
+                    </span>
+                  </div>
                   <StockAvailabillity stock={94} inStock={product?.inStock} />
                 </div>
 

@@ -23,12 +23,16 @@ import {
   FaTruckFast,
   FaFileInvoice,
   FaArrowUpRightFromSquare,
+  FaBolt,
+  FaPlug,
 } from "react-icons/fa6";
 
 const categoryLinks = [
   { name: "All Products", href: "/shop", icon: FaStore },
-  { name: "CCTV & Security", href: "/shop/cameras", icon: FaCamera },
+  { name: "CCTV & Security", href: "/shop/cctv-security", icon: FaCamera },
   { name: "Smartphones", href: "/shop/smart-phones", icon: FaMobileScreenButton },
+  { name: "Fast Cables", href: "/shop/data-cables", icon: FaBolt },
+  { name: "PD Chargers", href: "/shop/mobile-chargers", icon: FaPlug },
   { name: "Laptops", href: "/shop/laptops", icon: FaLaptop },
   { name: "Headphones", href: "/shop/headphones", icon: FaHeadphones },
   { name: "Smart Watches", href: "/shop/watches", icon: FaClock },

@@ -15,6 +15,7 @@ import {
   FaCircleExclamation,
   FaCircleCheck,
   FaSpinner,
+  FaArrowUpRightFromSquare,
 } from "react-icons/fa6";
 
 const AddNewProduct = () => {
@@ -47,6 +48,13 @@ const AddNewProduct = () => {
   const [uploadSuccessMsg, setUploadSuccessMsg] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [createdProduct, setCreatedProduct] = useState<{
+    id: string;
+    slug: string;
+    title: string;
+    categoryName?: string;
+    price?: number;
+  } | null>(null);
 
   const addProduct = async () => {
     setFormError(null);
@@ -85,6 +93,16 @@ const AddNewProduct = () => {
         setUploadSuccessMsg(null);
         setUploadError(null);
         setPreviewUrl(null);
+
+        const matchedCategory = categories.find((c) => c.id === data.categoryId || c.name === data.categoryId) || data.category;
+        setCreatedProduct({
+          id: data.id,
+          slug: data.slug,
+          title: data.title,
+          categoryName: matchedCategory?.name || "General",
+          price: data.price,
+        });
+
         setProduct({
           merchantId: merchants[0]?.id || "",
           title: "",
@@ -259,6 +277,57 @@ const AddNewProduct = () => {
             </button>
           </div>
         </div>
+
+        {/* Live Preview & Success Notification Banner */}
+        {createdProduct && (
+          <div className="mb-6 p-5 sm:p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-950 shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <FaCircleCheck className="text-emerald-600 text-xl shrink-0" />
+                  <span className="font-extrabold text-base text-emerald-900">
+                    Product Added Successfully!
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-800">
+                  <span className="font-semibold text-slate-900">&quot;{createdProduct.title}&quot;</span> was linked to category{" "}
+                  <span className="inline-block px-2 py-0.5 rounded-md font-bold bg-white text-emerald-700 border border-emerald-200">
+                    {createdProduct.categoryName}
+                  </span>
+                  {createdProduct.price !== undefined && (
+                    <span> • Price: <strong className="text-slate-900">${createdProduct.price}</strong></span>
+                  )}
+                </p>
+                <p className="text-[11px] text-emerald-700 font-mono">
+                  Store URL: /product/{createdProduct.slug}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                <Link
+                  href={`/product/${createdProduct.slug}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all hover:scale-105 active:scale-95"
+                >
+                  <FaArrowUpRightFromSquare className="text-xs" />
+                  <span>Live Preview Product</span>
+                </Link>
+                <Link
+                  href={`/admin/products/${createdProduct.id}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-800 text-xs font-semibold border border-emerald-300 transition-colors"
+                >
+                  <span>Edit</span>
+                </Link>
+                <button
+                  onClick={() => setCreatedProduct(null)}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-semibold transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Top-level Form Error Banner with Reasons */}
         {formError && (

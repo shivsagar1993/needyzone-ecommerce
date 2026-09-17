@@ -39,14 +39,42 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await req.json();
 
+    // Clean relation objects from payload so Prisma update succeeds
+    const {
+      category,
+      merchant,
+      customerOrders,
+      Wishlist,
+      bulkUploadItems,
+      ...rawFields
+    } = body;
+
+    let validCategoryId = rawFields.categoryId;
+    if (validCategoryId) {
+      try {
+        const existingCat = await prisma.category.findFirst({
+          where: {
+            OR: [{ id: validCategoryId }, { name: validCategoryId }],
+          },
+        });
+        if (existingCat) {
+          validCategoryId = existingCat.id;
+        }
+      } catch (_) {}
+    }
+
     try {
       const updated = await prisma.product.update({
         where: { id },
         data: {
-          ...body,
-          price: body.price !== undefined ? Number(body.price) : undefined,
-          inStock: body.inStock !== undefined ? Number(body.inStock) : undefined,
-          rating: body.rating !== undefined ? Number(body.rating) : undefined,
+          ...rawFields,
+          categoryId: validCategoryId || undefined,
+          price: rawFields.price !== undefined ? Math.round(Number(rawFields.price)) : undefined,
+          inStock: rawFields.inStock !== undefined ? Number(rawFields.inStock) : undefined,
+          rating: rawFields.rating !== undefined ? Number(rawFields.rating) : undefined,
+        },
+        include: {
+          category: true,
         },
       });
       return NextResponse.json(updated);

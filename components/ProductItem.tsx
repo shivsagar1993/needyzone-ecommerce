@@ -16,18 +16,25 @@ const ProductItem = ({
 
   return (
     <div className="group w-full flex flex-col justify-between bg-white border border-slate-200/80 hover:border-red-500/40 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-      {/* Top Meta: Manufacturer & Stock Badge */}
+      {/* Top Meta: Category & Stock Badge */}
       <div className="flex items-center justify-between gap-2 mb-3">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          {sanitize(product?.manufacturer) || "Brand"}
-        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
+            {product?.category?.name || product?.categoryId || "General"}
+          </span>
+          {product?.manufacturer && (
+            <span className="text-[10px] font-semibold text-slate-400">
+              • {sanitize(product.manufacturer)}
+            </span>
+          )}
+        </div>
         {inStock ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             In Stock
           </span>
         ) : (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200 shrink-0">
             Sold Out
           </span>
         )}

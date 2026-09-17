@@ -21,30 +21,35 @@ const Products = async ({
   if (inStockNum === 1 && outOfStockNum === 1) stockMode = "lte";
   if (inStockNum === 0 && outOfStockNum === 0) stockMode = "gt";
 
+  const categorySlug = params?.slug && params?.slug?.length > 0 ? params.slug[0] : "";
   let products = FALLBACK_PRODUCTS;
 
   try {
-    const data = await apiClient.get(
-      `/api/products?filters[price][$lte]=${
-        searchParams?.price || 3000
-      }&filters[rating][$gte]=${
-        Number(searchParams?.rating) || 0
-      }&filters[inStock][$${stockMode}]=1&${
-        params?.slug && params?.slug?.length > 0
-          ? `filters[category][$equals]=${params?.slug}&`
-          : ""
-      }sort=${searchParams?.sort || "defaultSort"}&page=${page}`
-    );
+    const query = new URLSearchParams();
+    if (searchParams?.price) query.set("price", String(searchParams.price));
+    if (searchParams?.rating) query.set("rating", String(searchParams.rating));
+    if (searchParams?.sort) query.set("sort", String(searchParams.sort));
+    if (searchParams?.inStock) query.set("inStock", String(searchParams.inStock));
+    if (searchParams?.outOfStock) query.set("outOfStock", String(searchParams.outOfStock));
+    if (categorySlug) {
+      query.set("category", categorySlug);
+      query.set("filters[category][$equals]", categorySlug);
+    }
+    query.set("page", String(page));
+
+    const data = await apiClient.get(`/api/products?${query.toString()}`);
 
     if (data.ok) {
       const result = await data.json();
-      if (Array.isArray(result) && result.length > 0) {
+      if (Array.isArray(result)) {
         products = result;
       }
     }
   } catch (_error) {
     // Gracefully use curated NeedyZone fallback products when backend API is offline
-    products = FALLBACK_PRODUCTS;
+    products = categorySlug
+      ? FALLBACK_PRODUCTS.filter((p) => (p.categoryId === categorySlug || p.category?.name === categorySlug))
+      : FALLBACK_PRODUCTS;
   }
 
   return (

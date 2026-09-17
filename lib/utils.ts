@@ -3,61 +3,61 @@ export const categoryMenuList = [
     id: 1,
     title: "CCTV & Security",
     src: "/dept-cctv.jpg",
-    href: "/shop/cameras"
+    href: "/shop/cctv-security",
   },
   {
     id: 2,
     title: "Smart Phones",
     src: "/dept-smartphone.jpg",
-    href: "/shop/smart-phones"
+    href: "/shop/smart-phones",
   },
   {
     id: 3,
     title: "Laptops",
     src: "/dept-laptop.jpg",
-    href: "/shop/laptops"
+    href: "/shop/laptops",
   },
   {
     id: 4,
     title: "Networking & WiFi",
     src: "/dept-networking.jpg",
-    href: "/shop/computers"
+    href: "/shop/networking-devices",
   },
   {
     id: 5,
     title: "Smart Switches",
     src: "/dept-smartswitch.jpg",
-    href: "/shop/computers"
+    href: "/shop/digital-switches",
   },
   {
     id: 6,
     title: "Fast Cables",
     src: "/dept-cables.jpg",
-    href: "/shop/computers"
+    href: "/shop/data-cables",
   },
   {
     id: 7,
     title: "PD Chargers",
     src: "/dept-charger.jpg",
-    href: "/shop/smart-phones"
+    href: "/shop/mobile-chargers",
   },
   {
     id: 8,
     title: "USB & Storage",
     src: "/dept-storage.jpg",
-    href: "/shop/computers"
+    href: "/shop/usb-products",
   },
   {
     id: 9,
-    title: "Smart Lighting",
-    src: "/dept-lighting.jpg",
-    href: "/shop/smart-phones"
+    title: "Power Strips",
+    src: "/dept-powerstrip.jpg",
+    href: "/shop/power-strips",
   },
   {
     id: 10,
-    title: "Power Strips",
-    src: "/dept-powerstrip.jpg",
-    href: "/shop/computers"
+    title: "All Products",
+    src: "/dept-lighting.jpg",
+    href: "/shop",
   },
 ];
 
