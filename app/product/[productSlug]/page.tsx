@@ -22,20 +22,42 @@ interface SingleProductPageProps {
   params: Promise<{ productSlug: string; id: string }>;
 }
 
+import prisma from "@/utils/db";
+import { FALLBACK_PRODUCTS } from "@/utils/fallbackProducts";
+
 const SingleProductPage = async ({ params }: SingleProductPageProps) => {
   const paramsAwaited = await params;
-  const data = await apiClient.get(
-    `/api/slugs/${paramsAwaited?.productSlug}`
-  );
-  const product = await data.json();
+  const slug = paramsAwaited?.productSlug;
 
-  const imagesData = await apiClient.get(
-    `/api/images/${paramsAwaited?.id}`
-  );
-  const images = await imagesData.json();
+  let product: any = null;
+  try {
+    product = await prisma.product.findFirst({
+      where: { slug },
+      include: { category: true },
+    });
+  } catch (dbErr) {
+    console.warn("[SingleProductPage] DB lookup error:", dbErr);
+  }
 
-  if (!product || product.error) {
+  if (!product) {
+    product = FALLBACK_PRODUCTS.find(
+      (p) => p.slug === slug || p.id === slug
+    );
+  }
+
+  if (!product) {
     notFound();
+  }
+
+  let images: ImageItem[] = [];
+  try {
+    if (product.id) {
+      images = await prisma.image.findMany({
+        where: { productID: product.id },
+      });
+    }
+  } catch (err) {
+    images = [];
   }
 
   const rating = product?.rating || 4;

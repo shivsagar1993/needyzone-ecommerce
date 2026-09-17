@@ -24,6 +24,15 @@ const getBaseUrl = (): string => {
     return '';
   }
 
+  // Server-side on Vercel:
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, '');
+  }
+
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL.replace(/\/$/, '');
+  }
+
   return (config.apiBaseUrl || '').replace(/\/$/, '');
 };
 
