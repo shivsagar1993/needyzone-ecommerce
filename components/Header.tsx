@@ -69,13 +69,37 @@ const categoryLinks: HeaderCategoryLink[] = [
   { name: "Tablets", href: "/shop/tablets", icon: FaTabletScreenButton },
 ];
 
-const Header = () => {
+interface HeaderProps {
+  initialNavCategories?: Array<{ id: string; name: string }>;
+}
+
+const mapCategoriesToLinks = (cats: Array<{ id: string; name: string }>): HeaderCategoryLink[] => {
+  return [
+    { name: "All Products", href: "/shop", icon: FaStore },
+    ...cats.map((cat: any) => {
+      const rawName = cat.name || cat.id || "";
+      const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
+      const displayName = rawName.includes("-")
+        ? rawName.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+        : rawName.charAt(0).toUpperCase() + rawName.slice(1);
+      return {
+        name: displayName,
+        href: `/shop/${slug}`,
+        icon: getCategoryIcon(`${slug} ${rawName}`),
+      };
+    }),
+  ];
+};
+
+const Header: React.FC<HeaderProps> = ({ initialNavCategories = [] }) => {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { wishQuantity } = useWishlistStore();
-  const [links, setLinks] = useState<HeaderCategoryLink[]>([
-    { name: "All Products", href: "/shop", icon: FaStore },
-  ]);
+  const [links, setLinks] = useState<HeaderCategoryLink[]>(() =>
+    initialNavCategories.length > 0
+      ? mapCategoriesToLinks(initialNavCategories)
+      : [{ name: "All Products", href: "/shop", icon: FaStore }]
+  );
 
   const handleLogout = () => {
     setTimeout(() => signOut(), 500);
@@ -87,26 +111,11 @@ const Header = () => {
   useEffect(() => {
     if (isAdmin) return;
     apiClient
-      .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
+      .get(`/api/categories?showInNav=true&t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          const dynamicLinks = [
-            { name: "All Products", href: "/shop", icon: FaStore },
-            ...data.map((cat: any) => {
-              const rawName = cat.name || cat.id || "";
-              const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
-              const displayName = rawName.includes("-")
-                ? rawName.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
-                : rawName.charAt(0).toUpperCase() + rawName.slice(1);
-              return {
-                name: displayName,
-                href: `/shop/${slug}`,
-                icon: getCategoryIcon(`${slug} ${rawName}`),
-              };
-            }),
-          ];
-          setLinks(dynamicLinks);
+          setLinks(mapCategoriesToLinks(data));
         }
       })
       .catch(() => {});

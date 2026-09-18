@@ -53,6 +53,7 @@ interface Category {
   name: string;
   isVisible?: boolean;
   showOnHome?: boolean;
+  showInNav?: boolean;
   orderIndex?: number;
 }
 

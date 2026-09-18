@@ -104,6 +104,7 @@ export async function PUT(
     }
     if (body.isVisible !== undefined) dataToUpdate.isVisible = Boolean(body.isVisible);
     if (body.showOnHome !== undefined) dataToUpdate.showOnHome = Boolean(body.showOnHome);
+    if (body.showInNav !== undefined) dataToUpdate.showInNav = Boolean(body.showInNav);
     if (body.orderIndex !== undefined) dataToUpdate.orderIndex = Number(body.orderIndex);
 
     // 1. Try DB update

@@ -15,6 +15,7 @@ import {
   FaTrashCan,
   FaPenToSquare,
   FaHouse,
+  FaCompass,
 } from "react-icons/fa6";
 
 interface CategoryItemType {
@@ -22,6 +23,7 @@ interface CategoryItemType {
   name: string;
   isVisible?: boolean;
   showOnHome?: boolean;
+  showInNav?: boolean;
   orderIndex?: number;
 }
 
@@ -77,6 +79,22 @@ const DashboardCategory = () => {
       );
     } catch (e) {
       toast.error("Failed to update home visibility");
+      fetchCategories();
+    }
+  };
+
+  const toggleShowInNav = async (cat: CategoryItemType) => {
+    const nextVal = cat.showInNav === false ? true : false;
+    setCategories((prev) =>
+      prev.map((c) => (c.id === cat.id ? { ...c, showInNav: nextVal } : c))
+    );
+    try {
+      await apiClient.put(`/api/categories/${cat.id}`, { showInNav: nextVal });
+      toast.success(
+        `"${cat.name}" ${nextVal ? "will now show" : "hidden"} in Top Navigation`
+      );
+    } catch (e) {
+      toast.error("Failed to update navigation visibility");
       fetchCategories();
     }
   };
@@ -169,16 +187,17 @@ const DashboardCategory = () => {
               <thead className="bg-slate-50/80 text-slate-500 uppercase font-semibold border-b border-slate-100">
                 <tr>
                   <th className="py-3.5 px-6">Department Name</th>
-                  <th className="py-3.5 px-6">Category ID</th>
-                  <th className="py-3.5 px-6 text-center">Home Page</th>
-                  <th className="py-3.5 px-6 text-center">Status</th>
+                  <th className="py-3.5 px-4">Category ID</th>
+                  <th className="py-3.5 px-4 text-center">Home Page</th>
+                  <th className="py-3.5 px-4 text-center">Top Nav</th>
+                  <th className="py-3.5 px-4 text-center">Status</th>
                   <th className="py-3.5 px-6 text-right">Quick Controls</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
                       Loading categories...
                     </td>
                   </tr>
@@ -186,6 +205,7 @@ const DashboardCategory = () => {
                   filteredCategories.map((category) => {
                     const isVisible = category.isVisible !== false;
                     const showOnHome = category.showOnHome !== false;
+                    const showInNav = category.showInNav !== false;
 
                     return (
                       <tr key={category.id} className="hover:bg-slate-50/70 transition-colors">
@@ -205,11 +225,11 @@ const DashboardCategory = () => {
                           </div>
                         </td>
 
-                        <td className="py-4 px-6 font-mono text-slate-400 text-xs">
+                        <td className="py-4 px-4 font-mono text-slate-400 text-xs">
                           {category?.id}
                         </td>
 
-                        <td className="py-4 px-6 text-center">
+                        <td className="py-4 px-4 text-center">
                           <button
                             onClick={() => toggleShowOnHome(category)}
                             title={showOnHome ? "Click to remove from Home page" : "Click to feature on Home page"}
@@ -220,7 +240,22 @@ const DashboardCategory = () => {
                             }`}
                           >
                             <FaHouse className="text-[10px]" />
-                            <span>{showOnHome ? "Featured" : "Hidden"}</span>
+                            <span>{showOnHome ? "Home Grid" : "Hidden"}</span>
+                          </button>
+                        </td>
+
+                        <td className="py-4 px-4 text-center">
+                          <button
+                            onClick={() => toggleShowInNav(category)}
+                            title={showInNav ? "Click to remove from Top Navigation" : "Click to show in Top Navigation"}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                              showInNav
+                                ? "bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100"
+                                : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
+                            }`}
+                          >
+                            <FaCompass className="text-[10px]" />
+                            <span>{showInNav ? "In Nav" : "Hidden"}</span>
                           </button>
                         </td>
 
@@ -263,7 +298,7 @@ const DashboardCategory = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
                       No categories found matching &quot;{searchQuery}&quot;
                     </td>
                   </tr>

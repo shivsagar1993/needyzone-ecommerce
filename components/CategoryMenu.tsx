@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from "react";
 import CategoryItem from "./CategoryItem";
 import Image from "next/image";
-import { categoryMenuList } from "@/lib/utils";
 import Heading from "./Heading";
 import apiClient from "@/lib/api";
 import { convertCategoryNameToURLFriendly } from "@/utils/categoryFormating";
+import { FaFolderOpen } from "react-icons/fa6";
 
 interface CategoryMenuItem {
   id: string | number;
@@ -66,11 +66,43 @@ const formatDisplayTitle = (rawName: string): string => {
   return rawName.charAt(0).toUpperCase() + rawName.slice(1);
 };
 
-import { FaFolderOpen } from "react-icons/fa6";
+const mapCategoriesToItems = (categories: any[]): CategoryMenuItem[] => {
+  const items: CategoryMenuItem[] = categories.map((cat) => {
+    const rawName = cat.name || cat.id || "";
+    const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
+    const title = formatDisplayTitle(rawName);
+    const keywordImage = getCategoryImage(slug, title);
+    const prodImg = cat.products?.[0]?.mainImage;
+    const src = prodImg
+      ? (prodImg.startsWith("http") || prodImg.startsWith("/") ? prodImg : `/${prodImg}`)
+      : keywordImage;
 
-const CategoryMenu = () => {
-  const [items, setItems] = useState<CategoryMenuItem[]>([]);
-  const [loading, setLoading] = useState(true);
+    return {
+      id: cat.id,
+      title,
+      src,
+      href: `/shop/${slug}`,
+    };
+  });
+
+  if (items.length > 0) {
+    items.push({
+      id: "all-products-link",
+      title: "All Products",
+      src: "/dept-lighting.jpg",
+      href: "/shop",
+    });
+  }
+
+  return items;
+};
+
+interface CategoryMenuProps {
+  initialCategories?: any[];
+}
+
+const CategoryMenu: React.FC<CategoryMenuProps> = ({ initialCategories = [] }) => {
+  const [categories, setCategories] = useState<any[]>(initialCategories);
 
   useEffect(() => {
     apiClient
@@ -78,41 +110,13 @@ const CategoryMenu = () => {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          if (data.length === 0) {
-            setItems([]);
-          } else {
-            const dynamicItems: CategoryMenuItem[] = data.map((cat: any) => {
-              const rawName = cat.name || cat.id || "";
-              const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
-              const title = formatDisplayTitle(rawName);
-              const src = getCategoryImage(slug, title);
-              return {
-                id: cat.id,
-                title,
-                src,
-                href: `/shop/${slug}`,
-              };
-            });
-
-            // Add "All Products" link at the end
-            dynamicItems.push({
-              id: "all-products-link",
-              title: "All Products",
-              src: "/dept-lighting.jpg",
-              href: "/shop",
-            });
-
-            setItems(dynamicItems);
-          }
+          setCategories(data);
         }
       })
-      .catch((err) => {
-        console.warn("[CategoryMenu] Failed loading dynamic categories:", err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .catch(() => {});
   }, []);
+
+  const items = mapCategoriesToItems(categories);
 
   return (
     <section className="py-20 bg-slate-50/80 border-b border-slate-200/60">
@@ -124,19 +128,7 @@ const CategoryMenu = () => {
           center={true}
         />
 
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 mt-10">
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div
-                key={n}
-                className="p-4 bg-white border border-slate-200/80 rounded-2xl h-48 animate-pulse flex flex-col items-center justify-center"
-              >
-                <div className="w-24 h-24 bg-slate-100 rounded-xl mb-3"></div>
-                <div className="h-3 w-20 bg-slate-100 rounded"></div>
-              </div>
-            ))}
-          </div>
-        ) : items.length > 0 ? (
+        {items.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 mt-10">
             {items.map((item) => (
               <CategoryItem title={item.title} key={item.id} href={item.href}>

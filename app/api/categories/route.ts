@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
       searchParams.get("includeHidden") === "true" ||
       searchParams.get("mode") === "admin";
     const showOnHomeOnly = searchParams.get("showOnHome") === "true";
+    const showInNavOnly = searchParams.get("showInNav") === "true";
 
     let allCats: Array<any> = [];
 
@@ -77,9 +78,19 @@ export async function GET(req: NextRequest) {
       if (showOnHomeOnly) {
         where.showOnHome = true;
       }
+      if (showInNavOnly) {
+        where.showInNav = true;
+      }
 
       const dbCategories = await prisma.category.findMany({
         where,
+        include: {
+          products: {
+            where: { isVisible: true },
+            select: { mainImage: true },
+            take: 1,
+          },
+        },
         orderBy: [
           { orderIndex: "asc" },
           { name: "asc" },
@@ -138,9 +149,10 @@ export async function POST(req: NextRequest) {
 
     const isVisible = body.isVisible !== undefined ? Boolean(body.isVisible) : true;
     const showOnHome = body.showOnHome !== undefined ? Boolean(body.showOnHome) : true;
+    const showInNav = body.showInNav !== undefined ? Boolean(body.showInNav) : true;
     const orderIndex = Number(body.orderIndex) || 0;
 
-    const newCategory = { id: categoryId, name: categoryName, isVisible, showOnHome, orderIndex };
+    const newCategory = { id: categoryId, name: categoryName, isVisible, showOnHome, showInNav, orderIndex };
 
     // 1. Try persisting to Prisma DB
     try {
@@ -164,6 +176,7 @@ export async function POST(req: NextRequest) {
           name: categoryName,
           isVisible,
           showOnHome,
+          showInNav,
           orderIndex,
         },
       });

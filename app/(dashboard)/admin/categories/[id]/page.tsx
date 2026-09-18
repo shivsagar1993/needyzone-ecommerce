@@ -20,10 +20,12 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
     name: string;
     isVisible: boolean;
     showOnHome: boolean;
+    showInNav: boolean;
   }>({
     name: "",
     isVisible: true,
     showOnHome: true,
+    showInNav: true,
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -63,6 +65,7 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
         name: convertCategoryNameToURLFriendly(categoryInput.name),
         isVisible: categoryInput.isVisible,
         showOnHome: categoryInput.showOnHome,
+        showInNav: categoryInput.showInNav,
       });
 
       if (response.status === 200) {
@@ -89,6 +92,7 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
           name: data?.name || "",
           isVisible: data?.isVisible !== undefined ? Boolean(data.isVisible) : true,
           showOnHome: data?.showOnHome !== undefined ? Boolean(data.showOnHome) : true,
+          showInNav: data?.showInNav !== undefined ? Boolean(data.showInNav) : true,
         });
       })
       .catch((err) => console.error("Failed to load category:", err));
@@ -173,7 +177,7 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
               </code>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
                 <input
                   type="checkbox"
@@ -184,8 +188,8 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
                   className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="block text-xs font-bold text-slate-800">Visible on Storefront</span>
-                  <span className="block text-[11px] text-slate-500">Uncheck to hide this category from all storefront views</span>
+                  <span className="block text-xs font-bold text-slate-800">Storefront Status</span>
+                  <span className="block text-[11px] text-slate-500">Active / Hidden on store</span>
                 </div>
               </label>
 
@@ -199,8 +203,23 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
                   className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="block text-xs font-bold text-slate-800">Show on Home Page</span>
-                  <span className="block text-[11px] text-slate-500">Display in top navigation & hero categories bar</span>
+                  <span className="block text-xs font-bold text-slate-800">Home Page Grid</span>
+                  <span className="block text-[11px] text-slate-500">Display in Browse by Category grid</span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={categoryInput.showInNav}
+                  onChange={(e) =>
+                    setCategoryInput({ ...categoryInput, showInNav: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Top Navigation</span>
+                  <span className="block text-[11px] text-slate-500">Display in top navbar link bar</span>
                 </div>
               </label>
             </div>

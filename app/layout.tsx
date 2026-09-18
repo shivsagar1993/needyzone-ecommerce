@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Providers from "@/Providers";
 import SessionTimeoutWrapper from "@/components/SessionTimeoutWrapper";
+import prisma from "@/utils/db";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,12 +24,32 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getServerSession();
+
+  let navCategories: Array<{ id: string; name: string }> = [];
+  try {
+    const dbCats = await prisma.category.findMany({
+      where: {
+        isVisible: true,
+        showInNav: true,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: [
+        { orderIndex: "asc" },
+        { name: "asc" },
+      ],
+    });
+    if (dbCats) navCategories = dbCats;
+  } catch (_) {}
+
   return (
     <html lang="en" data-theme="light" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <SessionProvider session={session}>
           <SessionTimeoutWrapper />
-          <Header />
+          <Header initialNavCategories={navCategories} />
           <Providers>
             {children}
           </Providers>
