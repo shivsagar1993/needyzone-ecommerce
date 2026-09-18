@@ -12,6 +12,9 @@ const DashboardNewCategoryPage = () => {
   const router = useRouter();
   const [categoryInput, setCategoryInput] = useState({
     name: "",
+    isVisible: true,
+    showOnHome: true,
+    orderIndex: 0,
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,12 +28,18 @@ const DashboardNewCategoryPage = () => {
     try {
       const response = await apiClient.post(`/api/categories`, {
         name: convertCategoryNameToURLFriendly(categoryInput.name),
+        isVisible: categoryInput.isVisible,
+        showOnHome: categoryInput.showOnHome,
+        orderIndex: Number(categoryInput.orderIndex) || 0,
       });
 
       if (response.status === 201 || response.status === 200 || response.ok) {
         toast.success("Category added successfully! Redirecting to list...");
         setCategoryInput({
           name: "",
+          isVisible: true,
+          showOnHome: true,
+          orderIndex: 0,
         });
         setTimeout(() => {
           router.push("/admin/categories");
@@ -117,6 +126,38 @@ const DashboardNewCategoryPage = () => {
                 </code>
               </div>
             )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={categoryInput.isVisible}
+                  onChange={(e) =>
+                    setCategoryInput({ ...categoryInput, isVisible: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Visible on Storefront</span>
+                  <span className="block text-[11px] text-slate-500">Uncheck to hide this category from all customers</span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={categoryInput.showOnHome}
+                  onChange={(e) =>
+                    setCategoryInput({ ...categoryInput, showOnHome: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Show on Home Page</span>
+                  <span className="block text-[11px] text-slate-500">Display in top navigation & hero categories bar</span>
+                </div>
+              </label>
+            </div>
 
             <div className="pt-4 flex items-center gap-3">
               <button

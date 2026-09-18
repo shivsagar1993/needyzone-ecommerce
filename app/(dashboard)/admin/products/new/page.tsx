@@ -29,6 +29,8 @@ const AddNewProduct = () => {
     description: string;
     slug: string;
     categoryId: string;
+    isVisible: boolean;
+    isFeatured: boolean;
   }>({
     merchantId: "",
     title: "",
@@ -39,6 +41,8 @@ const AddNewProduct = () => {
     description: "",
     slug: "",
     categoryId: "",
+    isVisible: true,
+    isFeatured: false,
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
@@ -83,6 +87,8 @@ const AddNewProduct = () => {
         price: Number(product.price),
         inStock: Number(product.inStock),
         mainImage: product.mainImage || "product_placeholder.jpg",
+        isVisible: product.isVisible !== undefined ? Boolean(product.isVisible) : true,
+        isFeatured: product.isFeatured !== undefined ? Boolean(product.isFeatured) : false,
       });
       const response = await apiClient.post(`/api/products`, sanitizedProduct);
       const data = await response.json();
@@ -113,6 +119,8 @@ const AddNewProduct = () => {
           description: "",
           slug: "",
           categoryId: categories[0]?.id || "",
+          isVisible: true,
+          isFeatured: false,
         });
       } else {
         const reason =
@@ -220,7 +228,7 @@ const AddNewProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await apiClient.get(`/api/categories?t=${Date.now()}`, {
+      const res = await apiClient.get(`/api/categories?mode=admin&t=${Date.now()}`, {
         cache: "no-store",
       });
       const data = await res.json();
@@ -492,6 +500,38 @@ const AddNewProduct = () => {
                   <option value={0}>Out of Stock</option>
                 </select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={product.isVisible}
+                  onChange={(e) =>
+                    setProduct({ ...product, isVisible: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Storefront Visibility</span>
+                  <span className="block text-[11px] text-slate-500">Uncheck to hide this product from customers</span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={product.isFeatured}
+                  onChange={(e) =>
+                    setProduct({ ...product, isFeatured: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Featured Showcase</span>
+                  <span className="block text-[11px] text-slate-500">Highlight in Home Page Featured Products</span>
+                </div>
+              </label>
             </div>
           </div>
 

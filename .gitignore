@@ -58,3 +58,4 @@ Thumbs.db
 .DS_Store
 .vercel
 .env*
+/_system_backups/

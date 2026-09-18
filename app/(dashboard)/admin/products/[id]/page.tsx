@@ -92,6 +92,8 @@ const DashboardProductDetails = ({ params }: DashboardProductDetailsProps) => {
         ...product,
         price: Number(product.price),
         inStock: Number(product.inStock),
+        isVisible: (product as any).isVisible !== undefined ? Boolean((product as any).isVisible) : true,
+        isFeatured: (product as any).isFeatured !== undefined ? Boolean((product as any).isFeatured) : false,
       });
 
       if (response.ok) {
@@ -208,7 +210,7 @@ const DashboardProductDetails = ({ params }: DashboardProductDetailsProps) => {
 
   const fetchCategories = async () => {
     try {
-      const res = await apiClient.get(`/api/categories?t=${Date.now()}`, {
+      const res = await apiClient.get(`/api/categories?mode=admin&t=${Date.now()}`, {
         cache: "no-store",
       });
       const data = await res.json();
@@ -413,6 +415,38 @@ const DashboardProductDetails = ({ params }: DashboardProductDetailsProps) => {
                   }
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={(product as any).isVisible ?? true}
+                  onChange={(e) =>
+                    setProduct({ ...product, isVisible: e.target.checked } as any)
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Storefront Visibility</span>
+                  <span className="block text-[11px] text-slate-500">Uncheck to hide this product from customers</span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={(product as any).isFeatured ?? false}
+                  onChange={(e) =>
+                    setProduct({ ...product, isFeatured: e.target.checked } as any)
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Featured Showcase</span>
+                  <span className="block text-[11px] text-slate-500">Highlight in Home Page Featured Products</span>
+                </div>
+              </label>
             </div>
           </div>
 

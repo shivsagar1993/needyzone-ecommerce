@@ -4,17 +4,36 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { formatCategoryName } from "../../../../utils/categoryFormating";
 import apiClient from "@/lib/api";
-import { FaPlus, FaEye, FaFolderOpen, FaMagnifyingGlass, FaArrowsRotate } from "react-icons/fa6";
+import toast from "react-hot-toast";
+import {
+  FaPlus,
+  FaEye,
+  FaEyeSlash,
+  FaFolderOpen,
+  FaMagnifyingGlass,
+  FaArrowsRotate,
+  FaTrashCan,
+  FaPenToSquare,
+  FaHouse,
+} from "react-icons/fa6";
+
+interface CategoryItemType {
+  id: string;
+  name: string;
+  isVisible?: boolean;
+  showOnHome?: boolean;
+  orderIndex?: number;
+}
 
 const DashboardCategory = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryItemType[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   const fetchCategories = () => {
     setLoading(true);
     apiClient
-      .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
+      .get(`/api/categories?mode=admin&t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         setCategories(Array.isArray(data) ? data : []);
@@ -29,6 +48,60 @@ const DashboardCategory = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  const toggleVisibility = async (cat: CategoryItemType) => {
+    const nextVal = cat.isVisible === false ? true : false;
+    setCategories((prev) =>
+      prev.map((c) => (c.id === cat.id ? { ...c, isVisible: nextVal } : c))
+    );
+    try {
+      await apiClient.put(`/api/categories/${cat.id}`, { isVisible: nextVal });
+      toast.success(
+        `"${cat.name}" is now ${nextVal ? "Visible on Store" : "Hidden from Store"}`
+      );
+    } catch (e) {
+      toast.error("Failed to update visibility");
+      fetchCategories();
+    }
+  };
+
+  const toggleShowOnHome = async (cat: CategoryItemType) => {
+    const nextVal = cat.showOnHome === false ? true : false;
+    setCategories((prev) =>
+      prev.map((c) => (c.id === cat.id ? { ...c, showOnHome: nextVal } : c))
+    );
+    try {
+      await apiClient.put(`/api/categories/${cat.id}`, { showOnHome: nextVal });
+      toast.success(
+        `"${cat.name}" ${nextVal ? "will now show" : "hidden"} on Home Page`
+      );
+    } catch (e) {
+      toast.error("Failed to update home visibility");
+      fetchCategories();
+    }
+  };
+
+  const deleteCategory = async (cat: CategoryItemType) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete category "${cat.name}"? Products under this category may be affected.`
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await apiClient.delete(`/api/categories/${cat.id}`);
+      if (res.ok || res.status === 204) {
+        toast.success(`Category "${cat.name}" deleted successfully`);
+        setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+      } else {
+        toast.error("Failed to delete category");
+      }
+    } catch (e) {
+      toast.error("Error deleting category");
+      fetchCategories();
+    }
+  };
 
   const filteredCategories = categories.filter((cat) =>
     cat?.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -51,7 +124,7 @@ const DashboardCategory = () => {
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Organize product departments, navigation hierarchies, and filter taxonomies.
+              Organize product departments, toggle live visibility, and manage storefront taxonomy.
             </p>
           </div>
 
@@ -97,48 +170,100 @@ const DashboardCategory = () => {
                 <tr>
                   <th className="py-3.5 px-6">Department Name</th>
                   <th className="py-3.5 px-6">Category ID</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                  <th className="py-3.5 px-6 text-center">Home Page</th>
+                  <th className="py-3.5 px-6 text-center">Status</th>
+                  <th className="py-3.5 px-6 text-right">Quick Controls</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={3} className="py-12 text-center text-slate-400">
+                    <td colSpan={5} className="py-12 text-center text-slate-400">
                       Loading categories...
                     </td>
                   </tr>
                 ) : filteredCategories.length > 0 ? (
-                  filteredCategories.map((category) => (
-                    <tr key={category.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
-                            <FaFolderOpen className="text-sm" />
+                  filteredCategories.map((category) => {
+                    const isVisible = category.isVisible !== false;
+                    const showOnHome = category.showOnHome !== false;
+
+                    return (
+                      <tr key={category.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                              <FaFolderOpen className="text-sm" />
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-900 text-sm capitalize block">
+                                {formatCategoryName(category?.name) || category?.name}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-mono">
+                                /shop/{category.id}
+                              </span>
+                            </div>
                           </div>
-                          <span className="font-bold text-slate-900 text-sm capitalize">
-                            {formatCategoryName(category?.name) || category?.name}
-                          </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="py-4 px-6 font-mono text-slate-400 text-xs">
-                        {category?.id}
-                      </td>
+                        <td className="py-4 px-6 font-mono text-slate-400 text-xs">
+                          {category?.id}
+                        </td>
 
-                      <td className="py-4 px-6 text-right">
-                        <Link
-                          href={`/admin/categories/${category?.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-semibold text-xs transition-colors"
-                        >
-                          <FaEye className="text-[10px]" />
-                          <span>Edit</span>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
+                        <td className="py-4 px-6 text-center">
+                          <button
+                            onClick={() => toggleShowOnHome(category)}
+                            title={showOnHome ? "Click to remove from Home page" : "Click to feature on Home page"}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                              showOnHome
+                                ? "bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100"
+                                : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
+                            }`}
+                          >
+                            <FaHouse className="text-[10px]" />
+                            <span>{showOnHome ? "Featured" : "Hidden"}</span>
+                          </button>
+                        </td>
+
+                        <td className="py-4 px-6 text-center">
+                          <button
+                            onClick={() => toggleVisibility(category)}
+                            title={isVisible ? "Click to hide from store" : "Click to make visible on store"}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                              isVisible
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                                : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                            }`}
+                          >
+                            {isVisible ? <FaEye className="text-[10px]" /> : <FaEyeSlash className="text-[10px]" />}
+                            <span>{isVisible ? "Active" : "Hidden"}</span>
+                          </button>
+                        </td>
+
+                        <td className="py-4 px-6 text-right">
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            <Link
+                              href={`/admin/categories/${category?.id}`}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 font-semibold text-xs transition-colors"
+                              title="Edit Category Name & Settings"
+                            >
+                              <FaPenToSquare className="text-[11px]" />
+                              <span>Edit</span>
+                            </Link>
+                            <button
+                              onClick={() => deleteCategory(category)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs transition-colors cursor-pointer"
+                              title="Delete Category"
+                            >
+                              <FaTrashCan className="text-[11px]" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan={3} className="py-12 text-center text-slate-400">
+                    <td colSpan={5} className="py-12 text-center text-slate-400">
                       No categories found matching &quot;{searchQuery}&quot;
                     </td>
                   </tr>

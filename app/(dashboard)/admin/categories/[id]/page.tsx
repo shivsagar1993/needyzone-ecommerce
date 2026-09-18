@@ -16,8 +16,14 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
   const resolvedParams = use(params);
   const id = resolvedParams.id;
 
-  const [categoryInput, setCategoryInput] = useState<{ name: string }>({
+  const [categoryInput, setCategoryInput] = useState<{
+    name: string;
+    isVisible: boolean;
+    showOnHome: boolean;
+  }>({
     name: "",
+    isVisible: true,
+    showOnHome: true,
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -55,6 +61,8 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
     try {
       const response = await apiClient.put(`/api/categories/${id}`, {
         name: convertCategoryNameToURLFriendly(categoryInput.name),
+        isVisible: categoryInput.isVisible,
+        showOnHome: categoryInput.showOnHome,
       });
 
       if (response.status === 200) {
@@ -79,6 +87,8 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
       .then((data) => {
         setCategoryInput({
           name: data?.name || "",
+          isVisible: data?.isVisible !== undefined ? Boolean(data.isVisible) : true,
+          showOnHome: data?.showOnHome !== undefined ? Boolean(data.showOnHome) : true,
         });
       })
       .catch((err) => console.error("Failed to load category:", err));
@@ -161,6 +171,38 @@ const DashboardSingleCategory = ({ params }: DashboardSingleCategoryProps) => {
               <code className="font-mono text-blue-600 font-bold">
                 {convertCategoryNameToURLFriendly(categoryInput.name)}
               </code>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={categoryInput.isVisible}
+                  onChange={(e) =>
+                    setCategoryInput({ ...categoryInput, isVisible: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Visible on Storefront</span>
+                  <span className="block text-[11px] text-slate-500">Uncheck to hide this category from all storefront views</span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={categoryInput.showOnHome}
+                  onChange={(e) =>
+                    setCategoryInput({ ...categoryInput, showOnHome: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-xs font-bold text-slate-800">Show on Home Page</span>
+                  <span className="block text-[11px] text-slate-500">Display in top navigation & hero categories bar</span>
+                </div>
+              </label>
             </div>
           </div>
 

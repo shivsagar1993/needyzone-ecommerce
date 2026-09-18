@@ -93,26 +93,31 @@ export async function PUT(
     const awaitedParams = await params;
     const { id } = awaitedParams;
     const body = await req.json();
-    const rawName = body.name?.trim();
-
-    if (!rawName) {
-      return NextResponse.json({ error: "Category name is required" }, { status: 400, headers: noCacheHeaders });
+    const dataToUpdate: any = {};
+    if (body.name !== undefined) {
+      const rawName = body.name?.trim();
+      if (rawName) {
+        dataToUpdate.name = rawName.includes("-")
+          ? rawName.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+          : rawName;
+      }
     }
-
-    const categoryName = rawName.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+    if (body.isVisible !== undefined) dataToUpdate.isVisible = Boolean(body.isVisible);
+    if (body.showOnHome !== undefined) dataToUpdate.showOnHome = Boolean(body.showOnHome);
+    if (body.orderIndex !== undefined) dataToUpdate.orderIndex = Number(body.orderIndex);
 
     // 1. Try DB update
     try {
       const updated = await prisma.category.update({
         where: { id },
-        data: { name: categoryName },
+        data: dataToUpdate,
       });
-      updateCustomCategoryInFile(id, categoryName);
+      if (dataToUpdate.name) updateCustomCategoryInFile(id, dataToUpdate.name);
       return NextResponse.json(updated, { headers: noCacheHeaders });
     } catch (dbErr: any) {
       console.warn("[API /api/categories/[id]] DB update error, saving to file:", dbErr.message);
-      updateCustomCategoryInFile(id, categoryName);
-      return NextResponse.json({ id, name: categoryName }, { headers: noCacheHeaders });
+      if (dataToUpdate.name) updateCustomCategoryInFile(id, dataToUpdate.name);
+      return NextResponse.json({ id, ...dataToUpdate }, { headers: noCacheHeaders });
     }
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || "Failed to update category" }, { status: 500, headers: noCacheHeaders });

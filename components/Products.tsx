@@ -3,8 +3,6 @@ import ProductItem from "./ProductItem";
 import Pagination from "./Pagination";
 import apiClient from "@/lib/api";
 import { FaMagnifyingGlass } from "react-icons/fa6";
-import { FALLBACK_PRODUCTS } from "@/utils/fallbackProducts";
-
 const Products = async ({
   params,
   searchParams,
@@ -23,7 +21,7 @@ const Products = async ({
   if (inStockNum === 0 && outOfStockNum === 0) stockMode = "gt";
 
   const categorySlug = params?.slug && params?.slug?.length > 0 ? params.slug[0] : "";
-  let products = FALLBACK_PRODUCTS;
+  let products: any[] = [];
   let totalItems = 0;
   let totalPages = 1;
   let pageSize = 9;
@@ -42,7 +40,9 @@ const Products = async ({
     query.set("page", String(page));
     query.set("limit", "9");
 
-    const data = await apiClient.get(`/api/products?${query.toString()}`);
+    const data = await apiClient.get(`/api/products?${query.toString()}`, {
+      cache: "no-store",
+    });
 
     if (data.ok) {
       const result = await data.json();
@@ -54,14 +54,9 @@ const Products = async ({
       pageSize = Number(data.headers.get("x-page-size") || 9);
     }
   } catch (_error) {
-    // Gracefully use curated NeedyZone fallback products when backend API is offline
-    const filtered = categorySlug
-      ? FALLBACK_PRODUCTS.filter((p) => (p.categoryId === categorySlug || p.category?.name === categorySlug))
-      : FALLBACK_PRODUCTS;
-    totalItems = filtered.length;
-    totalPages = Math.max(1, Math.ceil(totalItems / 9));
-    pageSize = 9;
-    products = filtered.slice((page - 1) * 9, page * 9);
+    products = [];
+    totalItems = 0;
+    totalPages = 1;
   }
 
   return (

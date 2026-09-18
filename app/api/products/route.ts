@@ -1,6 +1,8 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import { FALLBACK_PRODUCTS } from "@/utils/fallbackProducts";
 import { nanoid } from "nanoid";
 
 function normalizeCategoryKey(val: string): string {
@@ -117,6 +119,15 @@ export async function GET(req: NextRequest) {
         orderBy = { title: "desc" };
       }
 
+      const includeHidden = searchParams.get("includeHidden") === "true" || mode === "admin";
+      if (!includeHidden) {
+        where.isVisible = true;
+      }
+
+      if (searchParams.get("featured") === "true") {
+        where.isFeatured = true;
+      }
+
       const totalCount = await prisma.product.count({ where });
       const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
@@ -138,69 +149,25 @@ export async function GET(req: NextRequest) {
         "x-current-page": String(page),
         "x-page-size": String(limit),
         "Access-Control-Expose-Headers": "x-total-count, x-total-pages, x-current-page, x-page-size",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
       };
 
-      if (dbProducts && dbProducts.length > 0) {
-        return NextResponse.json(dbProducts, { headers });
-      }
-
-      // If category was specified and 0 products matched in DB, check fallback products for this category
-      if (categoryParam && categoryParam !== "all" && categoryParam.trim() !== "") {
-        const normTarget = normalizeCategoryKey(categoryParam);
-        const aliases = CATEGORY_ALIASES[normTarget] || [normTarget];
-        const matchedFallback = FALLBACK_PRODUCTS.filter((p) => {
-          const pCatId = normalizeCategoryKey(p.categoryId || "");
-          const pCatName = normalizeCategoryKey(p.category?.name || "");
-          return aliases.includes(pCatId) || aliases.includes(pCatName);
-        });
-
-        const fbTotalCount = matchedFallback.length;
-        const fbTotalPages = Math.max(1, Math.ceil(fbTotalCount / limit));
-        const paginatedFb = isStorePaginated ? matchedFallback.slice(skip, skip + limit) : matchedFallback;
-
-        return NextResponse.json(paginatedFb, {
-          headers: {
-            "x-total-count": String(fbTotalCount),
-            "x-total-pages": String(fbTotalPages),
-            "x-current-page": String(page),
-            "x-page-size": String(limit),
-            "Access-Control-Expose-Headers": "x-total-count, x-total-pages, x-current-page, x-page-size",
-          },
-        });
-      }
+      // Return actual database state directly (empty array when no products exist)
+      return NextResponse.json(dbProducts || [], { headers });
     } catch (dbErr) {
-      console.warn("[API /api/products] Database query error, serving fallback products:", dbErr);
-    }
-
-    // Filter fallback products if categoryParam is set
-    let filteredFallback = FALLBACK_PRODUCTS;
-    if (categoryParam && categoryParam !== "all" && categoryParam.trim() !== "") {
-      const normTarget = normalizeCategoryKey(categoryParam);
-      const aliases = CATEGORY_ALIASES[normTarget] || [normTarget];
-      filteredFallback = filteredFallback.filter((p) => {
-        const pCatId = normalizeCategoryKey(p.categoryId || "");
-        const pCatName = normalizeCategoryKey(p.category?.name || "");
-        return aliases.includes(pCatId) || aliases.includes(pCatName);
+      console.warn("[API /api/products] Database query error:", dbErr);
+      return NextResponse.json([], {
+        headers: {
+          "x-total-count": "0",
+          "x-total-pages": "1",
+          "x-current-page": "1",
+          "x-page-size": String(limit),
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
       });
     }
-
-    const fbTotal = filteredFallback.length;
-    const fbPages = Math.max(1, Math.ceil(fbTotal / limit));
-    const isStorePaginated = !(mode === "admin" && !searchParams.get("limit") && !searchParams.get("page"));
-    const paginatedFallback = isStorePaginated ? filteredFallback.slice(skip, skip + limit) : filteredFallback;
-
-    return NextResponse.json(paginatedFallback, {
-      headers: {
-        "x-total-count": String(fbTotal),
-        "x-total-pages": String(fbPages),
-        "x-current-page": String(page),
-        "x-page-size": String(limit),
-        "Access-Control-Expose-Headers": "x-total-count, x-total-pages, x-current-page, x-page-size",
-      },
-    });
   } catch (error: any) {
-    console.error("[API /api/products] Internal Server Error:", error);
-    return NextResponse.json(FALLBACK_PRODUCTS);
+    return NextResponse.json({ error: error?.message || "Failed to fetch products" }, { status: 500 });
   }
 }
 
@@ -300,6 +267,13 @@ export async function POST(req: NextRequest) {
       }
     } catch (_) {}
 
+    const isVisible = body.isVisible !== undefined ? Boolean(body.isVisible) : true;
+    const isFeatured = body.isFeatured !== undefined ? Boolean(body.isFeatured) : false;
+
+    const noCacheHeaders = {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    };
+
     try {
       const created = await (prisma.product.create as any)({
         data: {
@@ -311,6 +285,8 @@ export async function POST(req: NextRequest) {
           mainImage: mainImage || "product_placeholder.jpg",
           manufacturer: manufacturer || "NeedyZone",
           inStock: inStock !== undefined ? Number(inStock) : 1,
+          isVisible,
+          isFeatured,
           categoryId: validCategoryId,
           merchantId: validMerchantId,
           slug: finalSlug,
@@ -320,7 +296,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json(created, { status: 201 });
+      return NextResponse.json(created, { status: 201, headers: noCacheHeaders });
     } catch (dbErr: any) {
       console.error("[API /api/products] DB create error:", dbErr);
       const fallbackCreated = {

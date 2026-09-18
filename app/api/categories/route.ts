@@ -53,41 +53,44 @@ const saveCustomCategory = (cat: { id: string; name: string }) => {
 };
 
 export async function GET(req: NextRequest) {
+  const noCacheHeaders = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+  };
+
   try {
     const { searchParams } = new URL(req.url);
     const isDebug = searchParams.get("debug") === "1";
-    const customCats = readCustomCategories();
+    const includeHidden =
+      searchParams.get("includeHidden") === "true" ||
+      searchParams.get("mode") === "admin";
+    const showOnHomeOnly = searchParams.get("showOnHome") === "true";
 
-    let allCats: Array<{ id: string; name: string }> = [];
+    let allCats: Array<any> = [];
 
     try {
+      const where: any = {};
+      if (!includeHidden) {
+        where.isVisible = true;
+      }
+      if (showOnHomeOnly) {
+        where.showOnHome = true;
+      }
+
       const dbCategories = await prisma.category.findMany({
-        orderBy: { name: "asc" },
+        where,
+        orderBy: [
+          { orderIndex: "asc" },
+          { name: "asc" },
+        ],
       });
-      if (dbCategories && dbCategories.length > 0) {
+      if (dbCategories) {
         allCats = [...dbCategories];
       }
     } catch (dbErr: any) {
       console.warn("[API /api/categories] DB read error:", dbErr?.message);
     }
-
-    if (allCats.length === 0) {
-      allCats = [...DEFAULT_CATEGORIES];
-    }
-
-    // Merge custom categories that were added by user
-    for (const custom of customCats) {
-      if (!allCats.some((c) => c.id === custom.id || c.name.toLowerCase() === custom.name.toLowerCase())) {
-        allCats.push(custom);
-      }
-    }
-
-    // Sort alphabetically by name
-    const noCacheHeaders = {
-      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      "Pragma": "no-cache",
-      "Expires": "0",
-    };
 
     if (isDebug) {
       return NextResponse.json(
@@ -101,12 +104,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Return exact database state - empty array when no categories exist
     return NextResponse.json(allCats, { headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json(DEFAULT_CATEGORIES, {
-      headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      },
+    return NextResponse.json([], {
+      headers: noCacheHeaders,
     });
   }
 }
@@ -134,7 +136,11 @@ export async function POST(req: NextRequest) {
       rawName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") ||
       nanoid(8);
 
-    const newCategory = { id: categoryId, name: categoryName };
+    const isVisible = body.isVisible !== undefined ? Boolean(body.isVisible) : true;
+    const showOnHome = body.showOnHome !== undefined ? Boolean(body.showOnHome) : true;
+    const orderIndex = Number(body.orderIndex) || 0;
+
+    const newCategory = { id: categoryId, name: categoryName, isVisible, showOnHome, orderIndex };
 
     // 1. Try persisting to Prisma DB
     try {
@@ -156,6 +162,9 @@ export async function POST(req: NextRequest) {
         data: {
           id: categoryId,
           name: categoryName,
+          isVisible,
+          showOnHome,
+          orderIndex,
         },
       });
 

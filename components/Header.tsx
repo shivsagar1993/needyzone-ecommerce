@@ -73,7 +73,9 @@ const Header = () => {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { wishQuantity } = useWishlistStore();
-  const [links, setLinks] = useState<HeaderCategoryLink[]>(categoryLinks);
+  const [links, setLinks] = useState<HeaderCategoryLink[]>([
+    { name: "All Products", href: "/shop", icon: FaStore },
+  ]);
 
   const handleLogout = () => {
     setTimeout(() => signOut(), 500);
@@ -88,7 +90,7 @@ const Header = () => {
       .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const dynamicLinks = [
             { name: "All Products", href: "/shop", icon: FaStore },
             ...data.map((cat: any) => {

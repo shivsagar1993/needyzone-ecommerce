@@ -1,10 +1,16 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
-import { FALLBACK_PRODUCTS } from "@/utils/fallbackProducts";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+};
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
@@ -17,20 +23,15 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       });
 
       if (product) {
-        return NextResponse.json(product);
+        return NextResponse.json(product, { headers: noCacheHeaders });
       }
     } catch (dbErr) {
       console.warn("[API /api/products/[id]] DB read error:", dbErr);
     }
 
-    const fallback = FALLBACK_PRODUCTS.find((p) => p.id === id || p.slug === id);
-    if (fallback) {
-      return NextResponse.json(fallback);
-    }
-
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    return NextResponse.json({ error: "Product not found" }, { status: 404, headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Internal error" }, { status: 500, headers: noCacheHeaders });
   }
 }
 
@@ -72,18 +73,20 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
           price: rawFields.price !== undefined ? Math.round(Number(rawFields.price)) : undefined,
           inStock: rawFields.inStock !== undefined ? Number(rawFields.inStock) : undefined,
           rating: rawFields.rating !== undefined ? Number(rawFields.rating) : undefined,
+          isVisible: rawFields.isVisible !== undefined ? Boolean(rawFields.isVisible) : undefined,
+          isFeatured: rawFields.isFeatured !== undefined ? Boolean(rawFields.isFeatured) : undefined,
         },
         include: {
           category: true,
         },
       });
-      return NextResponse.json(updated);
+      return NextResponse.json(updated, { headers: noCacheHeaders });
     } catch (dbErr) {
       console.warn("[API /api/products/[id]] DB update error:", dbErr);
-      return NextResponse.json({ ...body, id });
+      return NextResponse.json({ ...body, id }, { headers: noCacheHeaders });
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || "Failed to update product" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to update product" }, { status: 500, headers: noCacheHeaders });
   }
 }
 
@@ -104,9 +107,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       console.warn("[API /api/products/[id]] DB delete error:", dbErr);
     }
 
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: 204, headers: noCacheHeaders });
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || "Failed to delete product" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to delete product" }, { status: 500, headers: noCacheHeaders });
   }
 }
 

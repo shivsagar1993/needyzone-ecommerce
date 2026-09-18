@@ -66,41 +66,51 @@ const formatDisplayTitle = (rawName: string): string => {
   return rawName.charAt(0).toUpperCase() + rawName.slice(1);
 };
 
+import { FaFolderOpen } from "react-icons/fa6";
+
 const CategoryMenu = () => {
-  const [items, setItems] = useState<CategoryMenuItem[]>(categoryMenuList);
+  const [items, setItems] = useState<CategoryMenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     apiClient
-      .get(`/api/categories?t=${Date.now()}`, { cache: "no-store" })
+      .get(`/api/categories?showOnHome=true&t=${Date.now()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const dynamicItems: CategoryMenuItem[] = data.map((cat: any) => {
-            const rawName = cat.name || cat.id || "";
-            const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
-            const title = formatDisplayTitle(rawName);
-            const src = getCategoryImage(slug, title);
-            return {
-              id: cat.id,
-              title,
-              src,
-              href: `/shop/${slug}`,
-            };
-          });
+        if (Array.isArray(data)) {
+          if (data.length === 0) {
+            setItems([]);
+          } else {
+            const dynamicItems: CategoryMenuItem[] = data.map((cat: any) => {
+              const rawName = cat.name || cat.id || "";
+              const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
+              const title = formatDisplayTitle(rawName);
+              const src = getCategoryImage(slug, title);
+              return {
+                id: cat.id,
+                title,
+                src,
+                href: `/shop/${slug}`,
+              };
+            });
 
-          // Add "All Products" link at the end
-          dynamicItems.push({
-            id: "all-products-link",
-            title: "All Products",
-            src: "/dept-lighting.jpg",
-            href: "/shop",
-          });
+            // Add "All Products" link at the end
+            dynamicItems.push({
+              id: "all-products-link",
+              title: "All Products",
+              src: "/dept-lighting.jpg",
+              href: "/shop",
+            });
 
-          setItems(dynamicItems);
+            setItems(dynamicItems);
+          }
         }
       })
       .catch((err) => {
-        console.warn("[CategoryMenu] Failed loading dynamic categories, keeping defaults:", err);
+        console.warn("[CategoryMenu] Failed loading dynamic categories:", err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
@@ -113,21 +123,46 @@ const CategoryMenu = () => {
           subtitle="Explore top technology segments, from daily smart devices to high-end creator gear."
           center={true}
         />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 mt-10">
-          {items.map((item) => (
-            <CategoryItem title={item.title} key={item.id} href={item.href}>
-              <div className="w-full aspect-square relative rounded-xl overflow-hidden bg-slate-50/60 p-3 mb-2 flex items-center justify-center group-hover:bg-blue-50/40 transition-colors">
-                <Image
-                  src={item.src}
-                  width={160}
-                  height={160}
-                  alt={item.title}
-                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-2xs"
-                />
+
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 mt-10">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div
+                key={n}
+                className="p-4 bg-white border border-slate-200/80 rounded-2xl h-48 animate-pulse flex flex-col items-center justify-center"
+              >
+                <div className="w-24 h-24 bg-slate-100 rounded-xl mb-3"></div>
+                <div className="h-3 w-20 bg-slate-100 rounded"></div>
               </div>
-            </CategoryItem>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : items.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 mt-10">
+            {items.map((item) => (
+              <CategoryItem title={item.title} key={item.id} href={item.href}>
+                <div className="w-full aspect-square relative rounded-xl overflow-hidden bg-slate-50/60 p-3 mb-2 flex items-center justify-center group-hover:bg-blue-50/40 transition-colors">
+                  <Image
+                    src={item.src}
+                    width={160}
+                    height={160}
+                    alt={item.title}
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-2xs"
+                  />
+                </div>
+              </CategoryItem>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 py-16 px-6 rounded-2xl bg-white border border-slate-200/80 text-center max-w-md mx-auto shadow-xs">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 border border-blue-100">
+              <FaFolderOpen className="text-2xl" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900">No Categories Configured</h3>
+            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+              There are currently no departments set to display on the storefront. Add or enable categories in the Admin Dashboard.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

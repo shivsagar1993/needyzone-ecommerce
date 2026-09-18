@@ -4,23 +4,22 @@ import Heading from "./Heading";
 import apiClient from "@/lib/api";
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa6";
-import { FALLBACK_PRODUCTS } from "@/utils/fallbackProducts";
-
 const ProductsSection = async () => {
-  let products = FALLBACK_PRODUCTS;
+  let products: any[] = [];
   
   try {
-    const data = await apiClient.get("/api/products");
+    const data = await apiClient.get("/api/products?limit=8", {
+      cache: "no-store",
+    });
     
     if (data.ok) {
       const result = await data.json();
-      if (Array.isArray(result) && result.length > 0) {
+      if (Array.isArray(result)) {
         products = result;
       }
     }
   } catch (_error) {
-    // Gracefully use curated NeedyZone fallback products when backend API is offline
-    products = FALLBACK_PRODUCTS;
+    products = [];
   }
 
   return (

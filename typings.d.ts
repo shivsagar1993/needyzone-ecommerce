@@ -8,8 +8,10 @@ interface Product {
   mainImage: string;
   manufacturer: string;
   categoryId: string;
-  category: {name: string}?;
+  category?: { name: string };
   inStock: number;
+  isVisible?: boolean;
+  isFeatured?: boolean;
 }
 
 interface Merchant {
@@ -49,6 +51,9 @@ interface OtherImages {
 interface Category {
   id: string;
   name: string;
+  isVisible?: boolean;
+  showOnHome?: boolean;
+  orderIndex?: number;
 }
 
 interface User {

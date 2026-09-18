@@ -29,6 +29,11 @@ model Product {
   merchant       Merchant @relation(fields: [merchantId], references: [id])
   // Back relation for bulk upload items
   bulkUploadItems bulk_upload_item[]      @relation("ProductBulkItems")
+
+  isVisible      Boolean                  @default(true)
+  isFeatured     Boolean                  @default(false)
+  createdAt      DateTime?                @default(now())
+  updatedAt      DateTime?                @updatedAt
 }
 
 model Image {
@@ -77,9 +82,14 @@ model customer_order_product {
 }
 
 model Category {
-  id       String    @id @default(uuid())
-  name     String    @unique
-  products Product[] // Define a one-to-many relationship
+  id          String    @id @default(uuid())
+  name        String    @unique
+  isVisible   Boolean   @default(true)
+  showOnHome  Boolean   @default(true)
+  orderIndex  Int       @default(0)
+  products    Product[] // Define a one-to-many relationship
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
 }
 
 model Wishlist {
