@@ -4,9 +4,44 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSortStore } from "@/app/_zustand/sortStore";
 import { usePaginationStore } from "@/app/_zustand/paginationStore";
-import { FaSliders, FaRotateLeft, FaFolderOpen } from "react-icons/fa6";
+import {
+  FaSliders,
+  FaRotateLeft,
+  FaFolderOpen,
+  FaCamera,
+  FaMobileScreenButton,
+  FaLaptop,
+  FaHeadphones,
+  FaClock,
+  FaVolumeHigh,
+  FaTabletScreenButton,
+  FaBolt,
+  FaPlug,
+  FaNetworkWired,
+  FaMicrochip,
+  FaHardDrive,
+  FaFolder,
+  FaStore,
+} from "react-icons/fa6";
 import apiClient from "@/lib/api";
 import { convertCategoryNameToURLFriendly } from "@/utils/categoryFormating";
+
+const getCategoryIcon = (slugOrName: string): React.ComponentType<{ className?: string }> => {
+  const s = slugOrName.toLowerCase();
+  if (s.includes("cctv") || s.includes("camera") || s.includes("nvr") || s.includes("security")) return FaCamera;
+  if (s.includes("phone") || s.includes("mobile")) return FaMobileScreenButton;
+  if (s.includes("laptop") || s.includes("computer") || s.includes("pc")) return FaLaptop;
+  if (s.includes("headphone") || s.includes("earbud") || s.includes("audio")) return FaHeadphones;
+  if (s.includes("watch") || s.includes("wearable") || s.includes("clock")) return FaClock;
+  if (s.includes("speaker") || s.includes("sound")) return FaVolumeHigh;
+  if (s.includes("tablet")) return FaTabletScreenButton;
+  if (s.includes("cable") || s.includes("wire")) return FaBolt;
+  if (s.includes("charger") || s.includes("plug") || s.includes("power")) return FaPlug;
+  if (s.includes("network") || s.includes("wifi") || s.includes("router")) return FaNetworkWired;
+  if (s.includes("switch") || s.includes("chip")) return FaMicrochip;
+  if (s.includes("usb") || s.includes("storage") || s.includes("drive")) return FaHardDrive;
+  return FaFolder;
+};
 
 interface InputCategory {
   inStock: { text: string; isChecked: boolean };
@@ -130,20 +165,22 @@ const Filters = () => {
               {categories.length}
             </span>
           </div>
-          <div className="space-y-1 max-h-52 overflow-y-auto pr-1 no-scrollbar">
+          <div className="space-y-1 max-h-60 overflow-y-auto pr-1 no-scrollbar">
             <Link
               href="/shop"
-              className={`block px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                 pathname === "/shop"
-                  ? "bg-blue-50 text-blue-600 font-bold border border-blue-100"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-700 hover:bg-slate-50 hover:text-blue-600"
               }`}
             >
-              All Departments
+              <FaStore className="text-xs shrink-0" />
+              <span>All Departments</span>
             </Link>
             {categories.map((c) => {
               const slug = c.id || convertCategoryNameToURLFriendly(c.name);
               const isActive = pathname.includes(`/shop/${slug}`);
+              const IconComponent = getCategoryIcon(`${slug} ${c.name}`);
               const displayName = c.name.includes("-")
                 ? c.name
                     .split("-")
@@ -154,13 +191,14 @@ const Filters = () => {
                 <Link
                   key={c.id}
                   href={`/shop/${slug}`}
-                  className={`block px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                     isActive
-                      ? "bg-blue-50 text-blue-600 font-bold border border-blue-100"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "text-slate-700 hover:bg-slate-50 hover:text-blue-600"
                   }`}
                 >
-                  {displayName}
+                  <IconComponent className={`text-xs shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
+                  <span className="truncate">{displayName}</span>
                 </Link>
               );
             })}

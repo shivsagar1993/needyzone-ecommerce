@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import CategoryItem from "./CategoryItem";
+import { useAllProductsDrawer } from "./AllProductsProvider";
 import Image from "next/image";
 import Heading from "./Heading";
 import apiClient from "@/lib/api";
@@ -11,7 +12,7 @@ interface CategoryMenuItem {
   id: string | number;
   title: string;
   src: string;
-  href: string;
+  href?: string;
 }
 
 const getCategoryImage = (slug: string, name: string): string => {
@@ -85,14 +86,11 @@ const mapCategoriesToItems = (categories: any[]): CategoryMenuItem[] => {
     };
   });
 
-  if (items.length > 0) {
-    items.push({
-      id: "all-products-link",
-      title: "All Products",
-      src: "/dept-lighting.jpg",
-      href: "/shop",
-    });
-  }
+  items.push({
+    id: "all-products-link",
+    title: "All Products",
+    src: "/dept-lighting.jpg",
+  });
 
   return items;
 };
@@ -103,6 +101,7 @@ interface CategoryMenuProps {
 
 const CategoryMenu: React.FC<CategoryMenuProps> = ({ initialCategories = [] }) => {
   const [categories, setCategories] = useState<any[]>(initialCategories);
+  const { open: allProductsOpen, openDrawer } = useAllProductsDrawer();
 
   useEffect(() => {
     apiClient
@@ -119,43 +118,57 @@ const CategoryMenu: React.FC<CategoryMenuProps> = ({ initialCategories = [] }) =
   const items = mapCategoriesToItems(categories);
 
   return (
-    <section className="py-20 bg-slate-50/80 border-b border-slate-200/60">
-      <div className="max-w-screen-2xl mx-auto px-6 lg:px-12">
-        <Heading
-          badge="Departments"
-          title="Browse by Category"
-          subtitle="Explore top technology segments, from daily smart devices to high-end creator gear."
-          center={true}
-        />
+    <section className="border-b border-slate-200/60 bg-slate-50/80 py-20">
+        <div className="mx-auto max-w-screen-2xl px-6 lg:px-12">
+          <Heading
+            badge="Departments"
+            title="Browse by Category"
+            subtitle="Explore top technology segments, from daily smart devices to high-end creator gear."
+            center={true}
+          />
 
-        {items.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 mt-10">
-            {items.map((item) => (
-              <CategoryItem title={item.title} key={item.id} href={item.href}>
-                <div className="w-full aspect-square relative rounded-xl overflow-hidden bg-slate-50/60 p-3 mb-2 flex items-center justify-center group-hover:bg-blue-50/40 transition-colors">
-                  <Image
-                    src={item.src}
-                    width={160}
-                    height={160}
-                    alt={item.title}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-2xs"
-                  />
-                </div>
-              </CategoryItem>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-10 py-16 px-6 rounded-2xl bg-white border border-slate-200/80 text-center max-w-md mx-auto shadow-xs">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 border border-blue-100">
-              <FaFolderOpen className="text-2xl" />
+          {categories.length === 0 && (
+            <div className="mx-auto mt-10 max-w-md rounded-2xl border border-slate-200/80 bg-white px-6 py-10 text-center shadow-xs">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600">
+                <FaFolderOpen className="text-2xl" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900">No Categories Configured</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                There are currently no departments set to display on the storefront. Browse the complete catalog using the All Products card.
+              </p>
             </div>
-            <h3 className="text-base font-bold text-slate-900">No Categories Configured</h3>
-            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              There are currently no departments set to display on the storefront. Add or enable categories in the Admin Dashboard.
-            </p>
+          )}
+
+          <div
+            className={`grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 ${
+              categories.length === 0 ? "mt-6" : "mt-10"
+            }`}
+          >
+            {items.map((item) => {
+              const isAllProducts = item.id === "all-products-link";
+
+              return (
+                <CategoryItem
+                  title={item.title}
+                  key={item.id}
+                  href={item.href}
+                  onClick={isAllProducts ? openDrawer : undefined}
+                  expanded={isAllProducts ? allProductsOpen : undefined}
+                >
+                  <div className="relative mb-2 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-slate-50/60 p-3 transition-colors group-hover:bg-blue-50/40">
+                    <Image
+                      src={item.src}
+                      width={160}
+                      height={160}
+                      alt={item.title}
+                      className="h-full w-full object-contain drop-shadow-2xs transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                </CategoryItem>
+              );
+            })}
           </div>
-        )}
-      </div>
+        </div>
     </section>
   );
 };

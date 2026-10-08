@@ -7,6 +7,7 @@ import 'svgmap/dist/svgMap.min.css';
 import SessionProvider from "@/utils/SessionProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AllProductsProvider from "@/components/AllProductsProvider";
 import Providers from "@/Providers";
 import SessionTimeoutWrapper from "@/components/SessionTimeoutWrapper";
 import prisma from "@/utils/db";
@@ -48,12 +49,14 @@ export default async function RootLayout({
     <html lang="en" data-theme="light" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <SessionProvider session={session}>
-          <SessionTimeoutWrapper />
-          <Header initialNavCategories={navCategories} />
-          <Providers>
-            {children}
-          </Providers>
-          <Footer />
+          <AllProductsProvider>
+            <SessionTimeoutWrapper />
+            <Header initialNavCategories={navCategories} />
+            <Providers>
+              {children}
+            </Providers>
+            <Footer />
+          </AllProductsProvider>
         </SessionProvider>
       </body>
     </html>

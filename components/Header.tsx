@@ -18,6 +18,7 @@ import {
   FaCamera,
   FaClock,
   FaStore,
+  FaBars,
   FaVolumeHigh,
   FaTabletScreenButton,
   FaTruckFast,
@@ -32,11 +33,13 @@ import {
 } from "react-icons/fa6";
 import apiClient from "@/lib/api";
 import { convertCategoryNameToURLFriendly } from "@/utils/categoryFormating";
+import { useAllProductsDrawer } from "./AllProductsProvider";
 
 interface HeaderCategoryLink {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  opensDrawer?: boolean;
 }
 
 const getCategoryIcon = (slugOrName: string): React.ComponentType<{ className?: string }> => {
@@ -57,7 +60,7 @@ const getCategoryIcon = (slugOrName: string): React.ComponentType<{ className?: 
 };
 
 const categoryLinks: HeaderCategoryLink[] = [
-  { name: "All Products", href: "/shop", icon: FaStore },
+  { name: "All Departments", href: "/shop", icon: FaBars, opensDrawer: true },
   { name: "CCTV & Security", href: "/shop/cctv-security", icon: FaCamera },
   { name: "Smartphones", href: "/shop/smart-phones", icon: FaMobileScreenButton },
   { name: "Fast Cables", href: "/shop/data-cables", icon: FaBolt },
@@ -75,7 +78,7 @@ interface HeaderProps {
 
 const mapCategoriesToLinks = (cats: Array<{ id: string; name: string }>): HeaderCategoryLink[] => {
   return [
-    { name: "All Products", href: "/shop", icon: FaStore },
+    { name: "All Departments", href: "/shop", icon: FaBars, opensDrawer: true },
     ...cats.map((cat: any) => {
       const rawName = cat.name || cat.id || "";
       const slug = cat.id || convertCategoryNameToURLFriendly(rawName);
@@ -95,10 +98,11 @@ const Header: React.FC<HeaderProps> = ({ initialNavCategories = [] }) => {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { wishQuantity } = useWishlistStore();
+  const { open: allProductsOpen, openDrawer } = useAllProductsDrawer();
   const [links, setLinks] = useState<HeaderCategoryLink[]>(() =>
     initialNavCategories.length > 0
       ? mapCategoriesToLinks(initialNavCategories)
-      : [{ name: "All Products", href: "/shop", icon: FaStore }]
+      : [{ name: "All Departments", href: "/shop", icon: FaBars, opensDrawer: true }]
   );
 
   const handleLogout = () => {
@@ -130,17 +134,27 @@ const Header: React.FC<HeaderProps> = ({ initialNavCategories = [] }) => {
           <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
             {/* Primary Header Row */}
             <div className="h-18 sm:h-20 flex items-center justify-between gap-4 lg:gap-8">
-              {/* Brand Logo */}
-              <Link href="/" className="flex items-center shrink-0 group py-1">
-                <Image
-                  src="/needyzone-logo.png"
-                  width={180}
-                  height={55}
-                  alt="NeedyZone"
-                  className="h-9 sm:h-11 w-auto object-contain group-hover:scale-[1.02] transition-transform"
-                  priority
-                />
-              </Link>
+              {/* Brand Logo & Mobile Drawer Toggle */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={openDrawer}
+                  aria-label="Open navigation sidebar"
+                  className="flex md:hidden items-center justify-center w-9 h-9 rounded-xl border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shrink-0"
+                >
+                  <FaBars className="text-sm" />
+                </button>
+                <Link href="/" className="flex items-center shrink-0 group py-1">
+                  <Image
+                    src="/needyzone-logo.png"
+                    width={180}
+                    height={55}
+                    alt="NeedyZone"
+                    className="h-9 sm:h-11 w-auto object-contain group-hover:scale-[1.02] transition-transform"
+                    priority
+                  />
+                </Link>
+              </div>
 
               {/* Central Search Bar */}
               <div className="flex-1 max-w-2xl hidden md:block">
@@ -164,19 +178,42 @@ const Header: React.FC<HeaderProps> = ({ initialNavCategories = [] }) => {
               <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                 {links.map((item) => {
                   const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg shrink-0 transition-all ${
-                        isActive
-                          ? "bg-red-50 text-red-600 font-bold border border-red-200/80 shadow-2xs"
-                          : "text-slate-600 hover:text-red-600 hover:bg-slate-100"
-                      }`}
-                    >
+                  const isActive = item.opensDrawer ? allProductsOpen : pathname === item.href;
+                  const className = `flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
+                    isActive
+                      ? "border border-red-200/80 bg-red-50 font-bold text-red-600 shadow-2xs"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-red-600"
+                  }`;
+                  const content = (
+                    <>
                       <Icon className="text-xs opacity-75" />
                       <span>{item.name}</span>
+                    </>
+                  );
+
+                  if (item.opensDrawer) {
+                    return (
+                      <button
+                        key={item.name}
+                        type="button"
+                        onClick={openDrawer}
+                        aria-haspopup="dialog"
+                        aria-expanded={allProductsOpen}
+                        className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 transition-all text-xs font-bold cursor-pointer ${
+                          allProductsOpen
+                            ? "bg-slate-900 text-white shadow-xs"
+                            : "bg-slate-100 hover:bg-slate-200/90 text-slate-800 hover:text-blue-600"
+                        }`}
+                      >
+                        <FaBars className="text-xs text-blue-600" />
+                        <span>{item.name}</span>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <Link key={item.name} href={item.href} className={className}>
+                      {content}
                     </Link>
                   );
                 })}
